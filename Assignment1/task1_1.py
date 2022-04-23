@@ -50,7 +50,7 @@ def grad_test():
     quadratically_grad_test = []
     for k in range(20):
         Fk = softmax_regression(C, X, W + epsilon * D)
-        F1 = F0 + epsilon * (np.ndarray.flatten(g0,'F') @ np.ndarray.flatten(D,'F'))
+        F1 = F0 + epsilon * (np.ndarray.flatten(g0, 'F') @ np.ndarray.flatten(D, 'F'))
         linearly_grad_test.append(abs(Fk - F0))
         quadratically_grad_test.append(abs(Fk - F1))
         epsilon = epsilon * 0.5
@@ -65,5 +65,5 @@ def grad_test():
     plt.legend()
     plt.show()
 
-grad_test()
 
+grad_test()

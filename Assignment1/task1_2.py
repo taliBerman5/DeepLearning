@@ -38,6 +38,7 @@ def plot(norms):
     plt.title("Least Squares with SGD")
     plt.ylabel("grad norm")
     plt.xlabel("epoch")
+    plt.legend()
     plt.show()
 
 def LS_test():

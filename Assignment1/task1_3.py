@@ -54,7 +54,6 @@ def clasify(X, W):
     labels = np.argmax(prob, axis=0)
     clasify_matrix = np.zeros((l, m))
     clasify_matrix[labels, np.arange(m)] = 1
-
     return clasify_matrix
 
 
@@ -90,6 +89,6 @@ def plot(success_percentage_train, success_percentage_validation, type, lr, batc
     plt.show()
 
 
-test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.1, batch=500)
-test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, "GMM", lr=0.1, batch=500)
-test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, "Peaks", lr=0.1, batch=500)
+# test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.1, batch=500)
+# test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, "GMM", lr=0.1, batch=500)
+# test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, "Peaks", lr=0.1, batch=500)

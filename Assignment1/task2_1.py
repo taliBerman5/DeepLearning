@@ -25,26 +25,14 @@ def softmax(Z):
     return np.exp(Z.T - eta) / np.sum(np.exp(Z.T - eta).T, axis=1).T
 
 
-def softmax_regression_grad_by_A(A, W, b, Y):
+def softmax_regression_grad(A, W, b, Y):
     n, m = np.shape(A)
     Z = W @ A + b
-    gradf = W.T @ (softmax(Z) - Y).T
-    return (1 / m) * gradf
-
-
-def softmax_regression_grad_by_b(A, W, b, Y):
-    n, m = np.shape(A)
-    Z = W @ A + b
-    gradf = (softmax(Z) - Y).T
-    gradf = np.squeeze(np.sum((1 / m) * gradf, axis=1, keepdims=True))
-    return np.reshape(gradf, b.shape)
-
-
-def softmax_regression_grad_by_W(A, W, b, Y):
-    n, m = np.shape(A)
-    Z = W @ A + b
-    gradf = A @ (softmax(Z) - Y)
-    return 1 / m * gradf
+    soft_max_minus_Y = (softmax(Z) - Y)
+    gradA = W.T @ soft_max_minus_Y.T / m
+    gradW = A @ soft_max_minus_Y / m
+    gradb = (soft_max_minus_Y.T / m).sum(axis=1, keepdims=True)
+    return gradA, gradW, gradb
 
 
 def init_params(layers_dims, D):
@@ -95,7 +83,8 @@ def linear_backward(dZ, cache):
     m = A_prev.shape[1]
     dW = dZ @ A_prev.T
     db = np.reshape(np.squeeze(np.sum(dZ, axis=1, keepdims=True)), b.shape)
-    dA_prev = np.dot(W.T, dZ)
+    d = dZ.sum(axis=1, keepdims=True)
+    dA_prev = W.T @ dZ
 
     return dA_prev, dW, db
 
@@ -107,9 +96,7 @@ def backpropagation(AL, Y, caches):
 
     A_prev, W, b = caches[-1][0]
     ZL = caches[-1][1]
-    dAL = softmax_regression_grad_by_A(A_prev, W, b, Y)
-    dWL = softmax_regression_grad_by_W(A_prev, W, b, Y).T
-    dbL = softmax_regression_grad_by_b(A_prev, W, b, Y)
+    dAL, dWL, dbL = softmax_regression_grad(A_prev, W, b, Y)
     grads["dA" + str(L)], grads["dW" + str(L)], grads["db" + str(L)] = dAL, dWL, dbL
 
     for l in reversed(range(L - 1)):

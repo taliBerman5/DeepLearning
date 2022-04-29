@@ -9,10 +9,6 @@ def tanh_grad(Z):
     return np.ones(np.shape(Z)) - np.power(np.tanh(Z), 2)
 
 
-def eta_calc(Z):
-    return np.max(Z)
-
-
 def softmax_regression(A, W, b, Y):
     Z = W @ A + b
     n, m = np.shape(A)
@@ -20,7 +16,7 @@ def softmax_regression(A, W, b, Y):
 
 
 def softmax(Z):
-    eta = eta_calc(Z)
+    eta = np.max(Z)
     return np.exp(Z - eta) / np.sum(np.exp(Z - eta), axis=0)
 
 
@@ -103,7 +99,7 @@ def backpropagation(AL, Y, caches):
         Zl = current_cache[1]
         dAl = grads["dA" + str(l + 2)]
         grads["dA" + str(l + 1)], grads["dW" + str(l + 1)], grads["db" + str(l + 1)] = linear_backward(
-            (tanh_grad(W @ A_prev + b)) * dAl, current_cache[0])  # TODO: check tanh_grad
+            (tanh_grad(W @ A_prev + b)) * dAl, current_cache[0])
 
     return grads
 
@@ -257,8 +253,8 @@ def grad_Test_nn():
     linearly_grad_test = []
     quadratically_grad_test = []
 
-    parameters = init_params([2, 3, 3, 5], D=0)
-    parameters_D = init_params([2, 3, 3, 5], D=1)
+    parameters = init_params([2, 3, 6, 5], D=0)
+    parameters_D = init_params([2, 3, 6, 5], D=1)
     num_params = len(parameters) // 2
 
     AL, caches = forward_pass(X, parameters, np.tanh)
@@ -275,7 +271,12 @@ def grad_Test_nn():
         funcK = softmax_regression(caches[-1][0][0], new_parameters["W" + str(num_params)],
                                    new_parameters["b" + str(num_params)],
                                    Y)
+
         func1 = func0 - eps * stack_grads @ stack_parameters_D
+        # func1 = func0 - eps * sum(np.sum(parameters_D["W" + str(i)] * grads["dW" + str(i)]) for i in range(1, num_params + 1)) - eps * \
+        #         sum(np.sum(parameters_D["b" + str(i)] * grads["db" + str(i)]) for i in range(1, num_params + 1))
+
+
         linearly_grad_test.append(abs(funcK - func0))
         quadratically_grad_test.append(abs(funcK - func1))
 
@@ -295,7 +296,7 @@ def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
     plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD")
 
 
-test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=1, batch=100)
+#test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.5, batch=100)
 
 # jacobian_test_WB()
 # jacobian_test_X()

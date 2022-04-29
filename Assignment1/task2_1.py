@@ -118,7 +118,7 @@ def backpropagation(AL, Y, caches):
         Zl = current_cache[1]
         dAl = grads["dA" + str(l + 2)]
         grads["dA" + str(l + 1)], grads["dW" + str(l + 1)], grads["db" + str(l + 1)] = linear_backward(
-            (tanh_grad(W @ A_prev)) * dAl, current_cache[0])  # TODO: check tanh_grad
+            (tanh_grad(W @ A_prev + b)) * dAl, current_cache[0])  # TODO: check tanh_grad
 
     return grads
 
@@ -218,7 +218,7 @@ def jacobian_test_W():
     grad__loss = []
     epsilon = 1
     func_result = (np.tanh(W @ X + b).T @ u).flatten()
-    dX, dW, db = linear_backward((tanh_grad(W @ X)) * u, (X, W, b))
+    dX, dW, db = linear_backward((tanh_grad(W @ X + b)) * u, (X, W, b))
     for i in range(20):
         func_with_epsilon = (np.tanh((W +epsilon*D_W) @ X + b).T @ u).flatten()
         f_loss.append(abs(func_with_epsilon - func_result))
@@ -235,6 +235,34 @@ def jacobian_test_W():
     plt.show()
 
 
+def jacobian_test_b():
+    X = Yt_Peaks[:, 0].reshape(2, 1)
+    u = np.random.rand(2, 1)
+    W = np.random.rand(2, 2)
+    b = np.random.rand(2, 1)
+    D_b = np.random.rand(2, 1)
+    D_b = (1 / LA.norm(D_b)) * D_b
+    f_loss = []
+    grad__loss = []
+    epsilon = 1
+    func_result = (np.tanh(W @ X + b).T @ u).flatten()
+    dX, dW, db = linear_backward((tanh_grad(W @ X + b)) * u, (X, W, b))
+    for i in range(20):
+        func_with_epsilon = (np.tanh(W @ X + (b +epsilon*db)).T @ u).flatten()
+        f_loss.append(abs(func_with_epsilon - func_result))
+        grad__loss.append(abs(
+            func_with_epsilon - func_result - (epsilon * (np.ndarray.flatten(D_b) @ np.ndarray.flatten(db)))))
+        epsilon *= 0.5
+    plt.figure()
+    plt.semilogy([i for i in range(20)], f_loss, label="Zero order approx")
+    plt.semilogy([i for i in range(20)], grad__loss, label="First order approx")
+    plt.xlabel('k')
+    plt.ylabel('error')
+    plt.suptitle('Jacobian transpose test for the derivative of the layer by b')
+    plt.legend()
+    plt.show()
+
+
 def jacobian_test_X():
     X = Yt_Peaks[:, 0].reshape(2, 1)
     u = np.random.rand(2, 1)
@@ -246,7 +274,7 @@ def jacobian_test_X():
     grad__loss = []
     epsilon = 1
     func_result = (np.tanh(W @ X + b).T @ u).flatten()
-    dX, dW, db = linear_backward((tanh_grad(W @ X)) * u, (X, W, b))
+    dX, dW, db = linear_backward((tanh_grad(W @ X + b)) * u, (X, W, b))
     for i in range(20):
         func_with_epsilon = (np.tanh(W @ (X + epsilon * D_X) + b).T @ u).flatten()
         f_loss.append(abs(func_with_epsilon - func_result))
@@ -316,5 +344,6 @@ def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
 # test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", 0.5, 100)
 
 jacobian_test_W()
+jacobian_test_b()
 jacobian_test_X()
 grad_Test_nn()

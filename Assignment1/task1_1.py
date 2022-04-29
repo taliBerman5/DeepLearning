@@ -55,13 +55,17 @@ def grad_test():
         quadratically_grad_test.append(abs(Fk - F1))
         epsilon = epsilon * 0.5
 
+    plot_grad_test(linearly_grad_test, quadratically_grad_test, "Grad test for softmax regression")
+
+
+def plot_grad_test(zero_order, first_order, title):
     axis = [i for i in range(20)]
     plt.figure()
-    plt.semilogy(axis, linearly_grad_test, label="Zero order approx")
-    plt.semilogy(axis, quadratically_grad_test, label="First order approx")
+    plt.semilogy(axis, zero_order, label="Zero order approx")
+    plt.semilogy(axis, first_order, label="First order approx")
     plt.xlabel("k")
     plt.ylabel("error")
-    plt.title("Grad test for softmax regression")
+    plt.title(title)
     plt.legend()
     plt.show()
 

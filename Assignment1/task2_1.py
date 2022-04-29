@@ -4,7 +4,7 @@ import scipy.io as sio
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
 from Assignment1.task1_3 import Ct_SwissRoll, Cv_SwissRoll, Yt_SwissRoll, Yv_SwissRoll, Yt_Peaks, Ct_Peaks, plot
-
+from Assignment1.task1_1 import plot_grad_test
 
 def tanh_grad(Z):
     return np.ones(np.shape(Z)) - np.power(np.tanh(Z), 2)
@@ -212,14 +212,9 @@ def jacobian_test_W():
         grad__loss.append(abs(
             func_with_epsilon - func_result - (epsilon * (np.ndarray.flatten(D_W) @ np.ndarray.flatten(dW)))))
         epsilon *= 0.5
-    plt.figure()
-    plt.semilogy([i for i in range(20)], f_loss, label="Zero order approx")
-    plt.semilogy([i for i in range(20)], grad__loss, label="First order approx")
-    plt.xlabel('k')
-    plt.ylabel('error')
-    plt.suptitle('Jacobian transpose test for the derivative of the layer by W')
-    plt.legend()
-    plt.show()
+
+    plot_grad_test(f_loss, grad__loss, 'Jacobian transpose test for the derivative of the layer by W')
+
 
 
 def jacobian_test_b():
@@ -240,14 +235,9 @@ def jacobian_test_b():
         grad__loss.append(abs(
             func_with_epsilon - func_result - (epsilon * (np.ndarray.flatten(D_b) @ np.ndarray.flatten(db)))))
         epsilon *= 0.5
-    plt.figure()
-    plt.semilogy([i for i in range(20)], f_loss, label="Zero order approx")
-    plt.semilogy([i for i in range(20)], grad__loss, label="First order approx")
-    plt.xlabel('k')
-    plt.ylabel('error')
-    plt.suptitle('Jacobian transpose test for the derivative of the layer by b')
-    plt.legend()
-    plt.show()
+
+    plot_grad_test(f_loss, grad__loss, 'Jacobian transpose test for the derivative of the layer by b')
+
 
 
 def jacobian_test_X():
@@ -268,14 +258,8 @@ def jacobian_test_X():
         grad__loss.append(abs(
             func_with_epsilon - func_result - (epsilon * (np.ndarray.flatten(D_X) @ np.ndarray.flatten(dX)))))
         epsilon *= 0.5
-    plt.figure()
-    plt.semilogy([i for i in range(20)], f_loss, label="Zero order approx")
-    plt.semilogy([i for i in range(20)], grad__loss, label="First order approx")
-    plt.xlabel('k')
-    plt.ylabel('error')
-    plt.suptitle('Jacobian transpose test for the derivative of the layer by X')
-    plt.legend()
-    plt.show()
+    plot_grad_test(f_loss, grad__loss, 'Jacobian transpose test for the derivative of the layer by X')
+
 
 
 def grad_Test_nn():
@@ -306,15 +290,8 @@ def grad_Test_nn():
 
         eps *= 0.5
 
-    axis = [i for i in range(20)]
-    plt.figure()
-    plt.semilogy(axis, linearly_grad_test, label="Zero order approx")
-    plt.semilogy(axis, quadratically_grad_test, label="First order approx")
-    plt.xlabel("k")
-    plt.ylabel("error")
-    plt.title("Grad test for Neural Network")
-    plt.legend()
-    plt.show()
+    plot_grad_test(linearly_grad_test, quadratically_grad_test, "Grad test for Neural Network")
+
 
 
 def test_data(Xt, Ct, Xv, Cv, type, lr, batch):

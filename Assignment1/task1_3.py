@@ -73,10 +73,10 @@ def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
     W = np.random.rand(n, l)
     W, success_percentage_train, success_percentage_validation = SGD(softmax_regression_grad, Xt, Ct, Xv, Cv, W,
                                                                      epochs, batch, lr)
-    plot(success_percentage_train, success_percentage_validation, type, lr, batch)
+    plot(success_percentage_train, success_percentage_validation, type, lr, batch, title="Softmax minimization using SGD")
 
 
-def plot(success_percentage_train, success_percentage_validation, type, lr, batch):
+def plot(success_percentage_train, success_percentage_validation, type, lr, batch, title):
     plt.figure()
     plt.plot([i for i in range(len(success_percentage_train))], success_percentage_train,
              label="Success percentage train")
@@ -84,7 +84,7 @@ def plot(success_percentage_train, success_percentage_validation, type, lr, batc
              label="Success percentage validation")
     plt.xlabel("epochs")
     plt.ylabel("Success rate")
-    plt.title(f'Softmax minimization using SGD - {type} \n lr = {lr}, batch = {batch}')
+    plt.title(f'{title} - {type} \n lr = {lr}, batch = {batch}')
     plt.legend()
     plt.show()
 

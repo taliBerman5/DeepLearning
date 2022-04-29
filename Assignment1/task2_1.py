@@ -1,6 +1,5 @@
 import numpy as np
 import math
-import scipy.io as sio
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
 from Assignment1.task1_3 import Ct_SwissRoll, Cv_SwissRoll, Yt_SwissRoll, Yv_SwissRoll, Yt_Peaks, Ct_Peaks, plot
@@ -11,27 +10,27 @@ def tanh_grad(Z):
 
 
 def eta_calc(Z):
-    return np.max(Z, axis=1)
+    return np.max(Z)
 
 
 def softmax_regression(A, W, b, Y):
     Z = W @ A + b
     n, m = np.shape(A)
-    return -1 / m * np.sum(Y * np.log(softmax(Z)).T)
+    return - np.sum(Y * np.log(softmax(Z))) / m
 
 
 def softmax(Z):
     eta = eta_calc(Z)
-    return np.exp(Z.T - eta) / np.sum(np.exp(Z.T - eta).T, axis=1).T
+    return np.exp(Z - eta) / np.sum(np.exp(Z - eta), axis=0)
 
 
 def softmax_regression_grad(A, W, b, Y):
     n, m = np.shape(A)
     Z = W @ A + b
     soft_max_minus_Y = (softmax(Z) - Y)
-    gradA = W.T @ soft_max_minus_Y.T / m
-    gradW = A @ soft_max_minus_Y / m
-    gradb = (soft_max_minus_Y.T / m).sum(axis=1, keepdims=True)
+    gradA = W.T @ soft_max_minus_Y / m
+    gradW = (soft_max_minus_Y @ A.T) / m
+    gradb = (soft_max_minus_Y / m).sum(axis=1, keepdims=True)
     return gradA, gradW, gradb
 
 
@@ -95,7 +94,6 @@ def backpropagation(AL, Y, caches):
     Y = Y.reshape(AL.shape)
 
     A_prev, W, b = caches[-1][0]
-    ZL = caches[-1][1]
     dAL, dWL, dbL = softmax_regression_grad(A_prev, W, b, Y)
     grads["dA" + str(L)], grads["dW" + str(L)], grads["db" + str(L)] = dAL, dWL, dbL
 
@@ -125,7 +123,7 @@ def clasify(X, parameters):
     L = len(parameters) // 2
     l = len(parameters["b" + str(L)])
     AL, caches = forward_pass(X, parameters, np.tanh)
-    labels = np.argmax(AL, axis=1)
+    labels = np.argmax(AL, axis=0)
     clasify_matrix = np.zeros((l, m))
     clasify_matrix[labels, np.arange(m)] = 1
     return clasify_matrix
@@ -155,15 +153,16 @@ def SGD_nn(Xt, Yt, Xv, Yv, layers_dims, epochs, batch, lr):
             Y_ind = Yt[:, ind]
 
             AL, caches = forward_pass(X_ind, parameters, np.tanh)
-            A_prev, W, b = caches[-1][0]
-            ZL = caches[-1][1]
-            costs.append(softmax_regression(A_prev, W, b, Y_ind))  # todo:change
             grads = backpropagation(AL, Y_ind, caches)
             parameters = update_parameters(parameters, grads, lr)
 
+        AL, caches = forward_pass(Xt, parameters, np.tanh)
+        A_prev, W, b = caches[-1][0]
+        costs.append(softmax_regression(A_prev, W, b, Yt))
         success_training.append(check_success(Xt, Yt, parameters))
         success_validation.append(check_success(Xv, Yv, parameters))
 
+    p = 2
     return parameters, success_training, success_validation
 
 
@@ -194,49 +193,38 @@ def stack_parametersD(parameters_D):
     return np.concatenate(stack, axis=0)
 
 
-def jacobian_test_W():
-    X = Yt_Peaks[:, 0].reshape(2, 1)
-    u = np.random.rand(2, 1)
-    W = np.random.rand(2, 2)
-    b = np.random.rand(2, 1)
-    D_W = np.random.rand(2, 2)
+def jacobian_test_WB():
+    X = np.random.randn(20, 1)
+    W = np.random.randn(2, 20)
+    b = np.random.randn(2, 1)
+
+    v_u = np.random.randn(2, 1)
+    u = v_u / np.linalg.norm(v_u)
+
+    D_W = np.random.rand(2, 20)
     D_W = (1 / LA.norm(D_W)) * D_W
-    f_loss = []
-    grad__loss = []
-    epsilon = 1
-    func_result = (np.tanh(W @ X + b).T @ u).flatten()
-    dX, dW, db = linear_backward((tanh_grad(W @ X + b)) * u, (X, W, b))
-    for i in range(20):
-        func_with_epsilon = (np.tanh((W +epsilon*D_W) @ X + b).T @ u).flatten()
-        f_loss.append(abs(func_with_epsilon - func_result))
-        grad__loss.append(abs(
-            func_with_epsilon - func_result - (epsilon * (np.ndarray.flatten(D_W) @ np.ndarray.flatten(dW)))))
-        epsilon *= 0.5
 
-    plot_grad_test(f_loss, grad__loss, 'Jacobian transpose test for the derivative of the layer by W')
-
-
-
-def jacobian_test_b():
-    X = Yt_Peaks[:, 0].reshape(2, 1)
-    u = np.random.rand(2, 1)
-    W = np.random.rand(2, 2)
-    b = np.random.rand(2, 1)
     D_b = np.random.rand(2, 1)
     D_b = (1 / LA.norm(D_b)) * D_b
+
     f_loss = []
     grad__loss = []
     epsilon = 1
-    func_result = (np.tanh(W @ X + b).T @ u).flatten()
+
+    f0 = (np.tanh(W @ X + b).T @ u).flatten()
     dX, dW, db = linear_backward((tanh_grad(W @ X + b)) * u, (X, W, b))
+
     for i in range(20):
-        func_with_epsilon = (np.tanh(W @ X + (b +epsilon*db)).T @ u).flatten()
-        f_loss.append(abs(func_with_epsilon - func_result))
+        w_eps_d = W + epsilon * D_W
+        b_eps_d = b + epsilon * D_b
+        f1 = (np.tanh(w_eps_d @ X + b_eps_d).T @ u).flatten()
+        f_loss.append(abs(f1 - f0))
         grad__loss.append(abs(
-            func_with_epsilon - func_result - (epsilon * (np.ndarray.flatten(D_b) @ np.ndarray.flatten(db)))))
+            f1 - f0 - (epsilon * (np.ndarray.flatten(D_W) @ np.ndarray.flatten(dW))) - (epsilon * (np.ndarray.flatten(D_b) @ np.ndarray.flatten(db)))))
         epsilon *= 0.5
 
-    plot_grad_test(f_loss, grad__loss, 'Jacobian transpose test for the derivative of the layer by b')
+    plot_grad_test(f_loss, grad__loss, 'Jacobian transpose test for the derivative of the layer by W and b')
+
 
 
 
@@ -265,14 +253,17 @@ def jacobian_test_X():
 def grad_Test_nn():
     X = Yt_Peaks
     Y = Ct_Peaks
-    eps = 1
+    eps = 0.1
     linearly_grad_test = []
     quadratically_grad_test = []
+
     parameters = init_params([2, 3, 3, 5], D=0)
+    parameters_D = init_params([2, 3, 3, 5], D=1)
     num_params = len(parameters) // 2
+
     AL, caches = forward_pass(X, parameters, np.tanh)
     grads = backpropagation(AL, Y, caches)
-    parameters_D = init_params([2, 3, 3, 5], D=1)
+
     func0 = softmax_regression(caches[-1][0][0], parameters["W" + str(num_params)], parameters["b" + str(num_params)],
                                Y)
     stack_grads = stack_w_b_grads(grads)
@@ -301,13 +292,11 @@ def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
     layer_dims = [n, 10, 10, 4, l]
 
     parameters, success_training, success_validation = SGD_nn(Xt, Ct, Xv, Cv, layer_dims, epochs, batch, lr)
+    plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD")
 
-    plot(success_training, success_validation, type, lr, batch)
 
+test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=1, batch=100)
 
-# test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", 0.5, 100)
-
-jacobian_test_W()
-jacobian_test_b()
-jacobian_test_X()
+# jacobian_test_WB()
+# jacobian_test_X()
 grad_Test_nn()

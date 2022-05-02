@@ -2,7 +2,7 @@ import numpy as np
 import math
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
-from Assignment1.task1_3 import Ct_SwissRoll, Cv_SwissRoll, Yt_SwissRoll, Yv_SwissRoll, Yt_Peaks, Ct_Peaks, plot
+from Assignment1.task1_3 import Ct_SwissRoll, Cv_SwissRoll, Yt_SwissRoll, Yv_SwissRoll, Yt_Peaks, Ct_Peaks, Yv_Peaks,Cv_Peaks, Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, plot
 from Assignment1.task1_1 import plot_grad_test
 
 def calc_tanh_grad(Z):
@@ -303,7 +303,7 @@ def test_data_200(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
     X_200, C_200 = sample(Xt, Ct, 200)
 
     parameters, success_training, success_validation = SGD_nn(X_200, C_200, Xv, Cv, layer_dims, epochs, batch, lr)
-    plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD")
+    plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD - 200 training samples")
 
 
 def sample(X, Y, amount):
@@ -316,6 +316,13 @@ def sample(X, Y, amount):
 
 
 test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
+test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
+
+test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.5, batch=100)
+test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.5, batch=100)
+
+test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
+test_data_200(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
 #
 # jacobian_test_WB()
 # jacobian_test_X()

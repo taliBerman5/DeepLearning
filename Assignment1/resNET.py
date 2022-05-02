@@ -28,7 +28,7 @@ def calc_res_layer(A_prev, W1, W2, b, activation_func):
     A = activation_func(Z)
     res_A = A_prev + W2 @ A
 
-    linear_cache = (A_prev, W1, W2, b)  # TODO: decide what to return
+    linear_cache = (A_prev, W1, W2, b)
     activation_cache = Z
 
     return res_A, (linear_cache, activation_cache)

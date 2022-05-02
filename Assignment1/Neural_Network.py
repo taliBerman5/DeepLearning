@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from Assignment1.task1_3 import Ct_SwissRoll, Cv_SwissRoll, Yt_SwissRoll, Yv_SwissRoll, Yt_Peaks, Ct_Peaks, plot
 from Assignment1.task1_1 import plot_grad_test
 
-def tanh_grad(Z):
+def calc_tanh_grad(Z):
     return np.ones(np.shape(Z)) - np.power(np.tanh(Z), 2)
 
 
@@ -99,7 +99,7 @@ def backpropagation(AL, Y, caches):
         Zl = current_cache[1]
         dAl = grads["dA" + str(l + 2)]
         grads["dA" + str(l + 1)], grads["dW" + str(l + 1)], grads["db" + str(l + 1)] = linear_backward(
-            (tanh_grad(W @ A_prev + b)) * dAl, current_cache[0])
+            (calc_tanh_grad(W @ A_prev + b)) * dAl, current_cache[0])
 
     return grads
 
@@ -158,12 +158,11 @@ def SGD_nn(Xt, Yt, Xv, Yv, layers_dims, epochs, batch, lr):
         success_training.append(check_success(Xt, Yt, parameters))
         success_validation.append(check_success(Xv, Yv, parameters))
 
-    p = 2
     return parameters, success_training, success_validation
 
 
 def update_parameters_grad_test(parameters, parameters_D, eps):
-    L = len(parameters) // 2
+    L = len(parameters) //2
     new_parameters = {}
     for l in range(1, L + 1):
         new_parameters["W" + str(l)] = parameters["W" + str(l)] + eps * parameters_D["W" + str(l)]
@@ -208,7 +207,7 @@ def jacobian_test_WB():
     epsilon = 1
 
     f0 = (np.tanh(W @ X + b).T @ u).flatten()
-    dX, dW, db = linear_backward((tanh_grad(W @ X + b)) * u, (X, W, b))
+    dX, dW, db = linear_backward((calc_tanh_grad(W @ X + b)) * u, (X, W, b))
 
     for i in range(20):
         w_eps_d = W + epsilon * D_W
@@ -235,7 +234,7 @@ def jacobian_test_X():
     grad__loss = []
     epsilon = 1
     func_result = (np.tanh(W @ X + b).T @ u).flatten()
-    dX, dW, db = linear_backward((tanh_grad(W @ X + b)) * u, (X, W, b))
+    dX, dW, db = linear_backward((calc_tanh_grad(W @ X + b)) * u, (X, W, b))
     for i in range(20):
         func_with_epsilon = (np.tanh(W @ (X + epsilon * D_X) + b).T @ u).flatten()
         f_loss.append(abs(func_with_epsilon - func_result))
@@ -286,18 +285,38 @@ def grad_Test_nn():
 
 
 
-def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
+def test_data(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
     epochs = 100
     n = len(Xt)
     l = len(Ct)
-    layer_dims = [n, 10, 10, 4, l]
+    layer_dims = [n] + hidden_layer + [l]
 
     parameters, success_training, success_validation = SGD_nn(Xt, Ct, Xv, Cv, layer_dims, epochs, batch, lr)
     plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD")
 
 
-#test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.5, batch=100)
+def test_data_200(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
+    epochs = 100
+    n = len(Xt)
+    l = len(Ct)
+    layer_dims = [n] + hidden_layer + [l]
+    X_200, C_200 = sample(Xt, Ct, 200)
 
+    parameters, success_training, success_validation = SGD_nn(X_200, C_200, Xv, Cv, layer_dims, epochs, batch, lr)
+    plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD")
+
+
+def sample(X, Y, amount):
+    rnd_ind = np.random.permutation(X.shape[1])
+    ind = rnd_ind[: amount]
+    X_ind = X[:, ind]
+    Y_ind = Y[:, ind]
+
+    return X_ind, Y_ind
+
+
+test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
+#
 # jacobian_test_WB()
 # jacobian_test_X()
-grad_Test_nn()
+# grad_Test_nn()

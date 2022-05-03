@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.io as sio
 import numpy.linalg as LA
-import matplotlib.pyplot as plt
+from Assignment1.calculations import plot_grad_test
 
 GMM = sio.loadmat('GMMData.mat')
 Peaks = sio.loadmat('PeaksData.mat')
@@ -58,16 +58,7 @@ def grad_test():
     plot_grad_test(linearly_grad_test, quadratically_grad_test, "Grad test for softmax regression")
 
 
-def plot_grad_test(zero_order, first_order, title):
-    axis = [i for i in range(20)]
-    plt.figure()
-    plt.semilogy(axis, zero_order, label="Zero order approx")
-    plt.semilogy(axis, first_order, label="First order approx")
-    plt.xlabel("k")
-    plt.ylabel("error")
-    plt.title(title)
-    plt.legend()
-    plt.show()
 
 
-# grad_test()
+
+grad_test()

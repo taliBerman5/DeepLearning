@@ -1,11 +1,7 @@
-import numpy as np
 import math
 import numpy.linalg as LA
-import matplotlib.pyplot as plt
-from Assignment1.task1_3 import Ct_SwissRoll, Cv_SwissRoll, Yt_SwissRoll, Yv_SwissRoll, Yt_Peaks, Ct_Peaks, plot
-from Assignment1.task1_1 import plot_grad_test
-from Assignment1.Neural_Network import softmax, calc_layer, softmax_regression_grad, softmax_regression, calc_tanh_grad
-
+from Assignment1.calculations import *
+from Assignment1.data import *
 
 def init_params(layers_dims, D):
     parameters = {}
@@ -182,6 +178,17 @@ def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
 
     parameters, success_training, success_validation = SGD_resnet(Xt, Ct, Xv, Cv, layer_dims, epochs, batch, lr)
     plot(success_training, success_validation, type, lr, batch, title="resNet using SGD")
+
+
+def test_data_200(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
+    epochs = 100
+    n = len(Xt)
+    l = len(Ct)
+    layer_dims = [n] + hidden_layer + [l]
+    X_200, C_200 = sample(Xt, Ct, 200)
+
+    parameters, success_training, success_validation = SGD_nn(X_200, C_200, Xv, Cv, layer_dims, epochs, batch, lr)
+    plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD - 200 training samples")
 
 
 test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.5, batch=100)

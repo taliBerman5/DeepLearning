@@ -1,28 +1,9 @@
 import numpy as np
-import scipy.io as sio
-import numpy.linalg as LA
-import matplotlib.pyplot as plt
 import math
 from Assignment1.task1_1 import softmax, softmax_regression_grad
+from Assignment1.calculations import plot
+from Assignment1.data import *
 
-GMM = sio.loadmat('GMMData.mat')
-Peaks = sio.loadmat('PeaksData.mat')
-SwissRoll = sio.loadmat('SwissRollData.mat')
-
-Ct_SwissRoll = SwissRoll["Ct"]
-Cv_SwissRoll = SwissRoll["Cv"]
-Yt_SwissRoll = SwissRoll["Yt"]
-Yv_SwissRoll = SwissRoll["Yv"]
-
-Ct_GMM = GMM["Ct"]
-Cv_GMM = GMM["Cv"]
-Yt_GMM = GMM["Yt"]
-Yv_GMM = GMM["Yv"]
-
-Ct_Peaks = Peaks["Ct"]
-Cv_Peaks = Peaks["Cv"]
-Yt_Peaks = Peaks["Yt"]
-Yv_Peaks = Peaks["Yv"]
 
 
 def SGD(Grad, Xt, Ct, Xv, Cv, W, epochs, batch, lr):
@@ -76,19 +57,8 @@ def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
     plot(success_percentage_train, success_percentage_validation, type, lr, batch, title="Softmax minimization using SGD")
 
 
-def plot(success_percentage_train, success_percentage_validation, type, lr, batch, title):
-    plt.figure()
-    plt.plot([i for i in range(len(success_percentage_train))], success_percentage_train,
-             label="Success percentage train")
-    plt.plot([i for i in range(len(success_percentage_validation))], success_percentage_validation,
-             label="Success percentage validation")
-    plt.xlabel("epochs")
-    plt.ylabel("Success rate")
-    plt.title(f'{title} - {type} \n lr = {lr}, batch = {batch}')
-    plt.legend()
-    plt.show()
 
 
-# test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.1, batch=500)
-# test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, "GMM", lr=0.1, batch=500)
-# test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, "Peaks", lr=0.1, batch=500)
+test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.1, batch=500)
+test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, "GMM", lr=0.1, batch=200)
+test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, "Peaks", lr=0.1, batch=200)

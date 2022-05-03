@@ -1,34 +1,7 @@
-import numpy as np
-import math
 import numpy.linalg as LA
-import matplotlib.pyplot as plt
-from Assignment1.task1_3 import Ct_SwissRoll, Cv_SwissRoll, Yt_SwissRoll, Yv_SwissRoll, Yt_Peaks, Ct_Peaks, Yv_Peaks,Cv_Peaks, Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, plot
-from Assignment1.task1_1 import plot_grad_test
-
-def calc_tanh_grad(Z):
-    return np.ones(np.shape(Z)) - np.power(np.tanh(Z), 2)
-
-
-def softmax_regression(A, W, b, Y):
-    Z = W @ A + b
-    n, m = np.shape(A)
-    return - np.sum(Y * np.log(softmax(Z))) / m
-
-
-def softmax(Z):
-    eta = np.max(Z)
-    return np.exp(Z - eta) / np.sum(np.exp(Z - eta), axis=0)
-
-
-def softmax_regression_grad(A, W, b, Y):
-    n, m = np.shape(A)
-    Z = W @ A + b
-    soft_max_minus_Y = (softmax(Z) - Y)
-    gradA = W.T @ soft_max_minus_Y / m
-    gradW = (soft_max_minus_Y @ A.T) / m
-    gradb = (soft_max_minus_Y / m).sum(axis=1, keepdims=True)
-    return gradA, gradW, gradb
-
+import math
+from Assignment1.calculations import *
+from Assignment1.data import *
 
 def init_params(layers_dims, D):
     parameters = {}
@@ -43,15 +16,6 @@ def init_params(layers_dims, D):
 
     return parameters
 
-
-def calc_layer(A_prev, W, b, activation_func):
-    Z = W @ A_prev + b
-    A = activation_func(Z)
-
-    linear_cache = (A_prev, W, b)
-    activation_cache = Z
-
-    return A, (linear_cache, activation_cache)
 
 
 def forward_pass(X, parameters, activation_func):
@@ -75,10 +39,8 @@ def forward_pass(X, parameters, activation_func):
 
 def linear_backward(dZ, cache):
     A_prev, W, b = cache
-    m = A_prev.shape[1]
     dW = dZ @ A_prev.T
     db = np.reshape(np.squeeze(np.sum(dZ, axis=1, keepdims=True)), b.shape)
-    d = dZ.sum(axis=1, keepdims=True)
     dA_prev = W.T @ dZ
 
     return dA_prev, dW, db
@@ -271,17 +233,14 @@ def grad_Test_nn():
                                    new_parameters["b" + str(num_params)],
                                    Y)
 
-        func1 = func0 - eps * stack_grads @ stack_parameters_D
-        # func1 = func0 - eps * sum(np.sum(parameters_D["W" + str(i)] * grads["dW" + str(i)]) for i in range(1, num_params + 1)) - eps * \
-        #         sum(np.sum(parameters_D["b" + str(i)] * grads["db" + str(i)]) for i in range(1, num_params + 1))
-
+        func1 = func0 + eps * stack_grads @ stack_parameters_D
 
         linearly_grad_test.append(abs(funcK - func0))
         quadratically_grad_test.append(abs(funcK - func1))
 
         eps *= 0.5
 
-    plot_grad_test(linearly_grad_test, quadratically_grad_test, "Grad test for Neural Network")
+    plot_grad_test(linearly_grad_test, quadratically_grad_test, "Grad test for the whole Neural Network")
 
 
 
@@ -306,24 +265,18 @@ def test_data_200(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
     plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD - 200 training samples")
 
 
-def sample(X, Y, amount):
-    rnd_ind = np.random.permutation(X.shape[1])
-    ind = rnd_ind[: amount]
-    X_ind = X[:, ind]
-    Y_ind = Y[:, ind]
 
-    return X_ind, Y_ind
 
 
 test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
 test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
 
-test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.5, batch=100)
-test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.5, batch=100)
+test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
+test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
 
 test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
 test_data_200(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
-#
-# jacobian_test_WB()
-# jacobian_test_X()
-# grad_Test_nn()
+
+jacobian_test_WB()
+jacobian_test_X()
+grad_Test_nn()

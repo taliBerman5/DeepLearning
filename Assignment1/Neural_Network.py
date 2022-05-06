@@ -164,46 +164,50 @@ def jacobian_test_WB():
     D_b = np.random.rand(2, 1)
     D_b = (1 / LA.norm(D_b)) * D_b
 
-    f_loss = []
-    grad__loss = []
+    zero_loss = []
+    one_loss = []
     epsilon = 1
 
     f0 = (np.tanh(W @ X + b).T @ u).flatten()
     dX, dW, db = linear_backward((calc_tanh_grad(W @ X + b)) * u, (X, W, b))
 
     for i in range(20):
-        w_eps_d = W + epsilon * D_W
-        b_eps_d = b + epsilon * D_b
-        f1 = (np.tanh(w_eps_d @ X + b_eps_d).T @ u).flatten()
-        f_loss.append(abs(f1 - f0))
-        grad__loss.append(abs(
+        w_eps_k = W + epsilon * D_W
+        b_eps_k = b + epsilon * D_b
+        f1 = (np.tanh(w_eps_k @ X + b_eps_k).T @ u).flatten()
+        zero_loss.append(abs(f1 - f0))
+        one_loss.append(abs(
             f1 - f0 - (epsilon * (np.ndarray.flatten(D_W) @ np.ndarray.flatten(dW))) - (epsilon * (np.ndarray.flatten(D_b) @ np.ndarray.flatten(db)))))
         epsilon *= 0.5
 
-    plot_grad_test(f_loss, grad__loss, 'Jacobian transpose test for the derivative of the layer by W and b')
+    plot_grad_test(zero_loss, one_loss, 'Jacobian transpose test for the derivative of the layer by W and b')
 
 
 
 
 def jacobian_test_X():
-    X = Yt_Peaks[:, 0].reshape(2, 1)
-    u = np.random.rand(2, 1)
+    X = np.random.randn(2, 1)
     W = np.random.rand(2, 2)
     b = np.random.rand(2, 1)
+
+    v_u = np.random.randn(2, 1)
+    u = v_u / np.linalg.norm(v_u)
+
     D_X = np.random.rand(2, 1)
     D_X = (1 / LA.norm(D_X)) * D_X
-    f_loss = []
-    grad__loss = []
+
+    zero_loss = []
+    one_loss = []
     epsilon = 1
-    func_result = (np.tanh(W @ X + b).T @ u).flatten()
+    f0 = (np.tanh(W @ X + b).T @ u).flatten()
     dX, dW, db = linear_backward((calc_tanh_grad(W @ X + b)) * u, (X, W, b))
     for i in range(20):
-        func_with_epsilon = (np.tanh(W @ (X + epsilon * D_X) + b).T @ u).flatten()
-        f_loss.append(abs(func_with_epsilon - func_result))
-        grad__loss.append(abs(
-            func_with_epsilon - func_result - (epsilon * (np.ndarray.flatten(D_X) @ np.ndarray.flatten(dX)))))
+        fk = (np.tanh(W @ (X + epsilon * D_X) + b).T @ u).flatten()
+        f1 = f0 + (epsilon * (np.ndarray.flatten(D_X) @ np.ndarray.flatten(dX)))
+        zero_loss.append(abs(fk - f0))
+        one_loss.append(abs(fk - f1))
         epsilon *= 0.5
-    plot_grad_test(f_loss, grad__loss, 'Jacobian transpose test for the derivative of the layer by X')
+    plot_grad_test(zero_loss, one_loss, 'Jacobian transpose test for the derivative of the layer by X')
 
 
 
@@ -221,7 +225,7 @@ def grad_Test_nn():
     AL, caches = forward_pass(X, parameters, np.tanh)
     grads = backpropagation(AL, Y, caches)
 
-    func0 = softmax_regression(caches[-1][0][0], parameters["W" + str(num_params)], parameters["b" + str(num_params)],
+    f0 = softmax_regression(caches[-1][0][0], parameters["W" + str(num_params)], parameters["b" + str(num_params)],
                                Y)
     stack_grads = stack_w_b_grads(grads)
     stack_parameters_D = stack_parametersD(parameters_D)
@@ -229,14 +233,14 @@ def grad_Test_nn():
     for i in range(20):
         new_parameters = update_parameters_grad_test(parameters, parameters_D, eps)
         AL, caches = forward_pass(X, new_parameters, np.tanh)
-        funcK = softmax_regression(caches[-1][0][0], new_parameters["W" + str(num_params)],
+        fK = softmax_regression(caches[-1][0][0], new_parameters["W" + str(num_params)],
                                    new_parameters["b" + str(num_params)],
                                    Y)
 
-        func1 = func0 + eps * stack_grads @ stack_parameters_D
+        f1 = f0 + eps * stack_grads @ stack_parameters_D
 
-        linearly_grad_test.append(abs(funcK - func0))
-        quadratically_grad_test.append(abs(funcK - func1))
+        linearly_grad_test.append(abs(fK - f0))
+        quadratically_grad_test.append(abs(fK - f1))
 
         eps *= 0.5
 
@@ -268,14 +272,14 @@ def test_data_200(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
 
 
 
-test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
-test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
-
-test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
-test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
-
-test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
-test_data_200(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
+# test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
+# test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
+#
+# test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
+# test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
+#
+# test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
+# test_data_200(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
 
 jacobian_test_WB()
 jacobian_test_X()

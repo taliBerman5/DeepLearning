@@ -19,28 +19,27 @@ def eta_calc(X, W):
 
 def softmax(X, W):
     eta = eta_calc(X, W)
-    return np.exp((X.T @ W).T - eta) / np.sum(np.exp((X.T @ W).T - eta).T,
-                                              axis=1)
+    return np.exp((X.T @ W).T - eta) / np.sum(np.exp((X.T @ W).T - eta).T, axis=1)
 
 
 def softmax_regression(X, C, W):
     n, m = np.shape(X)
-    return -1 / m * np.sum(C * np.log(softmax(X, W)).T)
+    return - np.sum(C * np.log(softmax(X, W))) / m
 
 
 def softmax_regression_grad(X, C, W):
     n, m = np.shape(X)
-    gradf = X @ (softmax(X, W) - C.T).T
+    gradf = X @ (softmax(X, W).T - C.T)
     return 1 / m * gradf
 
 
 def grad_test():
     X = Yt
-    C = Ct.T
+    C = Ct
     X = np.vstack((X, np.ones(len(X[0]))))  # added dimension for the bias
     epsilon = 0.1
     n = len(X)
-    l = len(C[1])
+    l = len(C)
     W = np.random.rand(n, l)
     D = np.random.rand(n, l)
     D = (1 / LA.norm(D)) * D  # normelize to 1

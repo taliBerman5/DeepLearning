@@ -19,7 +19,7 @@ def SGD(Grad, Xt, Ct, Xv, Cv, W, epochs, batch, lr):
             ind = rnd_ind[b * batch: (b + 1) * batch]
             X_ind = Xt[:, ind]
             C_ind = Ct[:, ind]
-            curr_grad = Grad(X_ind, C_ind.T, W) + 0.001 * W
+            curr_grad = Grad(X_ind, C_ind, W) + 0.001 * W
             W = W - lr * curr_grad
 
         success_training.append(check_success(Xt, Ct, W))
@@ -59,6 +59,6 @@ def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
 
 
 
-test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.1, batch=500)
+# test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.1, batch=20)
 test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, "GMM", lr=0.1, batch=200)
 test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, "Peaks", lr=0.1, batch=200)

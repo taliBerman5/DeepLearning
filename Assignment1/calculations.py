@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+def g(f, v):
+    return f.T @ v
+
 
 def calc_tanh_grad(Z):
     return np.ones(np.shape(Z)) - np.power(np.tanh(Z), 2)

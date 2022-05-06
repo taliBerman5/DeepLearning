@@ -3,6 +3,7 @@ import numpy.linalg as LA
 from Assignment1.calculations import *
 from Assignment1.data import *
 
+
 def init_params(layers_dims, D):
     parameters = {}
     L = len(layers_dims)  # number of layers
@@ -57,7 +58,6 @@ def forward_pass(X, parameters, activation_func):
 
 def linear_backward(dZ, cache):
     A_prev, W, b = cache
-    m = A_prev.shape[1]
     dW = dZ @ A_prev.T
     db = np.reshape(np.squeeze(np.sum(dZ, axis=1, keepdims=True)), b.shape)
     dA_prev = W.T @ dZ
@@ -158,6 +158,7 @@ def check_success(X, C, parameters):
     success = np.sum(1 - np.abs(clasify_matrix - C), axis=1)[0]
     return success / m
 
+
 def update_parameters_grad_test(parameters, parameters_D, eps):
     L = len(parameters) // 3
     new_parameters = {}
@@ -169,12 +170,143 @@ def update_parameters_grad_test(parameters, parameters_D, eps):
 
 
 
+def jacobian_test_WB_resnet():
+    X = np.random.randn(3, 1)
+    W1 = np.random.randn(3, 3)
+    W2 = np.random.randn(3, 3)
+    b = np.random.randn(3, 1)
 
-def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
+    v_u = np.random.randn(3, 1)
+    u = v_u / np.linalg.norm(v_u)
+
+    D_W1 = np.random.rand(3, 3)
+    D_W1 = (1 / LA.norm(D_W1)) * D_W1
+
+    D_W2 = np.random.rand(3, 3)
+    D_W2 = (1 / LA.norm(D_W2)) * D_W2
+
+    D_b = np.random.rand(3, 1)
+    D_b = (1 / LA.norm(D_b)) * D_b
+
+    zero_loss = []
+    one_loss = []
+    epsilon = 1
+    f0 = g(X + W2 @ np.tanh(W1 @ X + b), u).flatten()
+    dX, dW1, dW2, db = calc_grad_res(X, W1, W2, b, u)
+
+    for i in range(20):
+        w1_eps_k = W1 + epsilon * D_W1
+        w2_eps_k = W2 + epsilon * D_W2
+        b_eps_k = b + epsilon * D_b
+        fk = g(X + w2_eps_k @ np.tanh(w1_eps_k @ X + b_eps_k), u).flatten()
+        f1 = f0 + epsilon * (np.ndarray.flatten(D_W1) @ np.ndarray.flatten(dW1)) + epsilon * (np.ndarray.flatten(D_W2) @ np.ndarray.flatten(dW2)) + epsilon * (np.ndarray.flatten(D_b) @ np.ndarray.flatten(db))
+        zero_loss.append(abs(fk - f0))
+        one_loss.append(abs(fk - f1))
+        epsilon *= 0.5
+
+    plot_grad_test(zero_loss, one_loss, 'resNet \nJacobian transpose test for the derivative of the layer by W and b')
+
+
+
+
+def jacobian_test_X_resnet():
+    X = Yt_Peaks[:, 0].reshape(2, 1)
+    W1 = np.random.rand(2, 2)
+    W2 = np.random.rand(2, 2)
+    b = np.random.rand(2, 1)
+
+    v_u = np.random.randn(2, 1)
+    u = v_u / np.linalg.norm(v_u)
+
+    D_X = np.random.rand(2, 1)
+    D_X = (1 / LA.norm(D_X)) * D_X
+
+    zero_loss = []
+    one_loss = []
+    epsilon = 1
+    f0 = g(X + W2 @ np.tanh(W1 @ X + b), u).flatten()
+    dX, dW1, dW2, db = calc_grad_res(X, W1, W2, b, u)
+    for i in range(20):
+        x_eps_k = X + epsilon * D_X
+        fk = g(x_eps_k + W2 @ np.tanh(W1 @ x_eps_k + b), u).flatten()
+        f1 = f0 + epsilon * (np.ndarray.flatten(D_X) @ np.ndarray.flatten(dX))
+        zero_loss.append(abs(fk - f0))
+        one_loss.append(abs(fk - f1))
+        epsilon *= 0.5
+    plot_grad_test(zero_loss, one_loss, 'resNet\nJacobian transpose test for the derivative of the layer by X')
+
+def stack_w_b_grads(grads):
+    stack = []
+    l = len(grads) // 4
+    stack.append(grads["dW1_1"].flatten())
+    stack.append(grads["db1"].flatten())
+
+    for i in range(2, l):
+        stack.append(grads["dW1_" + str(i)].flatten())
+        stack.append(grads["dW2_" + str(i)].flatten())
+        stack.append(grads["db" + str(i)].flatten())
+
+    stack.append(grads["dW1_" + str(l)].flatten())
+    stack.append(grads["db" + str(l)].flatten())
+    return np.concatenate(stack, axis=0)
+
+
+def stack_parametersD(parameters_D):
+    stack = []
+    l = len(parameters_D) // 3
+
+    stack.append(parameters_D["W1_1"].flatten())
+    stack.append(parameters_D["b1"].flatten())
+
+    for i in range(2, l):
+        stack.append(parameters_D["W1_" + str(i)].flatten())
+        stack.append(parameters_D["W2_" + str(i)].flatten())
+        stack.append(parameters_D["b" + str(i)].flatten())
+
+    stack.append(parameters_D["W1_" + str(l)].flatten())
+    stack.append(parameters_D["b" + str(l)].flatten())
+    return np.concatenate(stack, axis=0)
+
+def grad_Test_nn_resnet():
+    X = Yt_Peaks
+    Y = Ct_Peaks
+    eps = 0.1
+    linearly_grad_test = []
+    quadratically_grad_test = []
+
+    parameters = init_params([2, 10, 10, 5], D=0)
+    parameters_D = init_params([2, 10, 10, 5], D=1)
+    num_params = len(parameters) // 3
+
+    AL, caches = forward_pass(X, parameters, np.tanh)
+    grads = backpropagation(AL, Y, caches)
+
+    f0 = softmax_regression(caches[-1][0][0], parameters["W1_" + str(num_params)], parameters["b" + str(num_params)], Y)
+    stack_grads = stack_w_b_grads(grads)
+    stack_parameters_D = stack_parametersD(parameters_D)
+
+    for i in range(20):
+        new_parameters = update_parameters_grad_test(parameters, parameters_D, eps)
+        AL, caches = forward_pass(X, new_parameters, np.tanh)
+        fK = softmax_regression(caches[-1][0][0], new_parameters["W1_" + str(num_params)],
+                                   new_parameters["b" + str(num_params)],
+                                   Y)
+
+        f1 = f0 + eps * stack_grads @ stack_parameters_D
+
+        linearly_grad_test.append(abs(fK - f0))
+        quadratically_grad_test.append(abs(fK - f1))
+
+        eps *= 0.5
+
+    plot_grad_test(linearly_grad_test, quadratically_grad_test, "resNet\nGrad test for the whole Neural Network")
+
+
+def test_data(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
     epochs = 100
     n = len(Xt)
     l = len(Ct)
-    layer_dims = [n, 10, 10, 10, l]
+    layer_dims = [n] + hidden_layer + [l]
 
     parameters, success_training, success_validation = SGD_resnet(Xt, Ct, Xv, Cv, layer_dims, epochs, batch, lr)
     plot(success_training, success_validation, type, lr, batch, title="resNet using SGD")
@@ -187,8 +319,19 @@ def test_data_200(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
     layer_dims = [n] + hidden_layer + [l]
     X_200, C_200 = sample(Xt, Ct, 200)
 
-    parameters, success_training, success_validation = SGD_nn(X_200, C_200, Xv, Cv, layer_dims, epochs, batch, lr)
+    parameters, success_training, success_validation = SGD_resnet(X_200, C_200, Xv, Cv, layer_dims, epochs, batch, lr)
     plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD - 200 training samples")
 
 
-test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.5, batch=100)
+# jacobian_test_WB_resnet()
+# jacobian_test_X_resnet()
+grad_Test_nn_resnet()
+
+# test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 10], "Swiss Roll", lr=0.5, batch=100)
+# test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 10], "Swiss Roll", lr=0.5, batch=100)
+#
+# test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 10], "Peaks", lr=0.1, batch=100)
+# test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 10], "Peaks", lr=0.1, batch=100)
+#
+# test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 10], "GMM", lr=0.5, batch=100)
+# test_data_200(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 10], "GMM", lr=0.5, batch=100)

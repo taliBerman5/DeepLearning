@@ -168,16 +168,16 @@ def jacobian_test_WB():
     one_loss = []
     epsilon = 1
 
-    f0 = (np.tanh(W @ X + b).T @ u).flatten()
+    f0 = g(np.tanh(W @ X + b), u).flatten()
     dX, dW, db = linear_backward((calc_tanh_grad(W @ X + b)) * u, (X, W, b))
 
     for i in range(20):
         w_eps_k = W + epsilon * D_W
         b_eps_k = b + epsilon * D_b
-        f1 = (np.tanh(w_eps_k @ X + b_eps_k).T @ u).flatten()
-        zero_loss.append(abs(f1 - f0))
-        one_loss.append(abs(
-            f1 - f0 - (epsilon * (np.ndarray.flatten(D_W) @ np.ndarray.flatten(dW))) - (epsilon * (np.ndarray.flatten(D_b) @ np.ndarray.flatten(db)))))
+        fk = g(np.tanh(w_eps_k @ X + b_eps_k), u).flatten()
+        f1 = f0 + epsilon * (np.ndarray.flatten(D_W) @ np.ndarray.flatten(dW)) + epsilon * (np.ndarray.flatten(D_b) @ np.ndarray.flatten(db))
+        zero_loss.append(abs(fk - f0))
+        one_loss.append(abs(fk - f1))
         epsilon *= 0.5
 
     plot_grad_test(zero_loss, one_loss, 'Jacobian transpose test for the derivative of the layer by W and b')
@@ -199,11 +199,11 @@ def jacobian_test_X():
     zero_loss = []
     one_loss = []
     epsilon = 1
-    f0 = (np.tanh(W @ X + b).T @ u).flatten()
+    f0 = g(np.tanh(W @ X + b),u).flatten()
     dX, dW, db = linear_backward((calc_tanh_grad(W @ X + b)) * u, (X, W, b))
     for i in range(20):
-        fk = (np.tanh(W @ (X + epsilon * D_X) + b).T @ u).flatten()
-        f1 = f0 + (epsilon * (np.ndarray.flatten(D_X) @ np.ndarray.flatten(dX)))
+        fk = g(np.tanh(W @ (X + epsilon * D_X) + b), u).flatten()
+        f1 = f0 + epsilon * (np.ndarray.flatten(D_X) @ np.ndarray.flatten(dX))
         zero_loss.append(abs(fk - f0))
         one_loss.append(abs(fk - f1))
         epsilon *= 0.5

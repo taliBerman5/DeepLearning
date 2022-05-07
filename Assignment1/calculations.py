@@ -68,3 +68,5 @@ def plot(success_percentage_train, success_percentage_validation, type, lr, batc
     plt.title(f'{title} - {type} \n lr = {lr}, batch = {batch}')
     plt.legend()
     plt.show()
+
+

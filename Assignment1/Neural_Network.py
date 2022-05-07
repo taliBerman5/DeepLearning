@@ -3,6 +3,7 @@ import math
 from Assignment1.calculations import *
 from Assignment1.data import *
 
+
 def init_params(layers_dims, D):
     parameters = {}
     L = len(layers_dims)  # number of layers
@@ -15,7 +16,6 @@ def init_params(layers_dims, D):
             parameters['b' + str(l)] = (1 / LA.norm(parameters['b' + str(l)])) * parameters['b' + str(l)]
 
     return parameters
-
 
 
 def forward_pass(X, parameters, activation_func):
@@ -77,7 +77,7 @@ def update_parameters(parameters, grads, lr):
 
 
 def clasify(X, parameters):
-    m = len(X[1])
+    m = len(X[0])
     L = len(parameters) // 2
     l = len(parameters["b" + str(L)])
     AL, caches = forward_pass(X, parameters, np.tanh)
@@ -88,10 +88,10 @@ def clasify(X, parameters):
 
 
 def check_success(X, C, parameters):
-    m = len(X[1])
+    m = len(X[0])
     clasify_matrix = clasify(X, parameters)
-    success = np.sum(1 - np.abs(clasify_matrix - C), axis=1)[0]
-    return success / m
+    no_success = np.sum(abs(clasify_matrix - C)) / (2 * m)
+    return 1 - no_success
 
 
 def SGD_nn(Xt, Yt, Xv, Yv, layers_dims, epochs, batch, lr):
@@ -124,7 +124,7 @@ def SGD_nn(Xt, Yt, Xv, Yv, layers_dims, epochs, batch, lr):
 
 
 def update_parameters_grad_test(parameters, parameters_D, eps):
-    L = len(parameters) //2
+    L = len(parameters) // 2
     new_parameters = {}
     for l in range(1, L + 1):
         new_parameters["W" + str(l)] = parameters["W" + str(l)] + eps * parameters_D["W" + str(l)]
@@ -175,14 +175,13 @@ def jacobian_test_WB():
         w_eps_k = W + epsilon * D_W
         b_eps_k = b + epsilon * D_b
         fk = g(np.tanh(w_eps_k @ X + b_eps_k), u).flatten()
-        f1 = f0 + epsilon * (np.ndarray.flatten(D_W) @ np.ndarray.flatten(dW)) + epsilon * (np.ndarray.flatten(D_b) @ np.ndarray.flatten(db))
+        f1 = f0 + epsilon * (np.ndarray.flatten(D_W) @ np.ndarray.flatten(dW)) + epsilon * (
+                    np.ndarray.flatten(D_b) @ np.ndarray.flatten(db))
         zero_loss.append(abs(fk - f0))
         one_loss.append(abs(fk - f1))
         epsilon *= 0.5
 
     plot_grad_test(zero_loss, one_loss, 'Jacobian transpose test for the derivative of the layer by W and b')
-
-
 
 
 def jacobian_test_X():
@@ -199,7 +198,7 @@ def jacobian_test_X():
     zero_loss = []
     one_loss = []
     epsilon = 1
-    f0 = g(np.tanh(W @ X + b),u).flatten()
+    f0 = g(np.tanh(W @ X + b), u).flatten()
     dX, dW, db = linear_backward((calc_tanh_grad(W @ X + b)) * u, (X, W, b))
     for i in range(20):
         fk = g(np.tanh(W @ (X + epsilon * D_X) + b), u).flatten()
@@ -208,7 +207,6 @@ def jacobian_test_X():
         one_loss.append(abs(fk - f1))
         epsilon *= 0.5
     plot_grad_test(zero_loss, one_loss, 'Jacobian transpose test for the derivative of the layer by X')
-
 
 
 def grad_Test_nn():
@@ -226,7 +224,7 @@ def grad_Test_nn():
     grads = backpropagation(AL, Y, caches)
 
     f0 = softmax_regression(caches[-1][0][0], parameters["W" + str(num_params)], parameters["b" + str(num_params)],
-                               Y)
+                            Y)
     stack_grads = stack_w_b_grads(grads)
     stack_parameters_D = stack_parametersD(parameters_D)
 
@@ -234,8 +232,8 @@ def grad_Test_nn():
         new_parameters = update_parameters_grad_test(parameters, parameters_D, eps)
         AL, caches = forward_pass(X, new_parameters, np.tanh)
         fK = softmax_regression(caches[-1][0][0], new_parameters["W" + str(num_params)],
-                                   new_parameters["b" + str(num_params)],
-                                   Y)
+                                new_parameters["b" + str(num_params)],
+                                Y)
 
         f1 = f0 + eps * stack_grads @ stack_parameters_D
 
@@ -245,7 +243,6 @@ def grad_Test_nn():
         eps *= 0.5
 
     plot_grad_test(linearly_grad_test, quadratically_grad_test, "Grad test for the whole Neural Network")
-
 
 
 def test_data(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
@@ -269,17 +266,14 @@ def test_data_200(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
     plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD - 200 training samples")
 
 
+test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
+test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
 
+test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
+test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
 
-
-# test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
-# test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
-#
-# test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
-# test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
-#
-# test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
-# test_data_200(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
+test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
+test_data_200(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
 
 jacobian_test_WB()
 jacobian_test_X()

@@ -13,7 +13,7 @@ def SGD(Grad, Xt, Ct, Xv, Cv, W, epochs, batch, lr):
     for i in range(epochs):
         rnd_ind = np.random.permutation(m)
         if i % 50 == 0:
-            lr *= 0.5
+            lr *= 0.1
 
         for b in range(math.floor(m / batch)):
             ind = rnd_ind[b * batch: (b + 1) * batch]
@@ -29,8 +29,8 @@ def SGD(Grad, Xt, Ct, Xv, Cv, W, epochs, batch, lr):
 
 
 def clasify(X, W):
-    l = len(W[1])
-    m = len(X[1])
+    l = len(W[0])
+    m = len(X[0])
     prob = softmax(X, W)
     labels = np.argmax(prob, axis=0)
     clasify_matrix = np.zeros((l, m))
@@ -39,10 +39,10 @@ def clasify(X, W):
 
 
 def check_success(X, C, W):
-    m = len(X[1])
+    m = len(X[0])
     clasify_matrix = clasify(X, W)
-    success = np.sum(1 - np.abs(clasify_matrix - C), axis=1)[0]
-    return success / m
+    no_success = np.sum(abs(C - clasify_matrix)) / (2 * m)
+    return 1 - no_success
 
 
 def test_data(Xt, Ct, Xv, Cv, type, lr, batch):

@@ -142,7 +142,7 @@ def SGD_resnet(Xt, Yt, Xv, Yv, layers_dims, epochs, batch, lr):
 
 
 def clasify(X, parameters):
-    m = len(X[1])
+    m = len(X[0])
     L = len(parameters) // 3
     l = len(parameters["b" + str(L)])
     AL, caches = forward_pass(X, parameters, np.tanh)
@@ -153,10 +153,10 @@ def clasify(X, parameters):
 
 
 def check_success(X, C, parameters):
-    m = len(X[1])
+    m = len(X[0])
     clasify_matrix = clasify(X, parameters)
-    success = np.sum(1 - np.abs(clasify_matrix - C), axis=1)[0]
-    return success / m
+    no_success = np.sum(abs(clasify_matrix - C)) / (2 * m)
+    return 1 - no_success
 
 
 def update_parameters_grad_test(parameters, parameters_D, eps):

@@ -70,3 +70,8 @@ def plot(success_percentage_train, success_percentage_validation, type, lr, batc
     plt.show()
 
 
+def check_success(X, C, parameters, classify_func):
+    m = len(X[0])
+    clasify_matrix = classify_func(X, parameters)
+    no_success = np.sum(abs(clasify_matrix - C)) / (2 * m)
+    return 1 - no_success

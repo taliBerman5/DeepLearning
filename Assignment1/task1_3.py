@@ -1,14 +1,13 @@
 import numpy as np
 import math
 from Assignment1.task1_1 import softmax, softmax_regression_grad
-from Assignment1.calculations import plot
+from Assignment1.calculations import plot, check_success
 from Assignment1.data import *
 
 
-
 def SGD(Grad, Xt, Ct, Xv, Cv, W, epochs, batch, lr):
-    success_training = [check_success(Xt, Ct, W)]
-    success_validation = [check_success(Xv, Cv, W)]
+    success_training = [check_success(Xt, Ct, W, classify)]
+    success_validation = [check_success(Xv, Cv, W, classify)]
     m = len(Xt[0])
     for i in range(epochs):
         rnd_ind = np.random.permutation(m)
@@ -22,13 +21,13 @@ def SGD(Grad, Xt, Ct, Xv, Cv, W, epochs, batch, lr):
             curr_grad = Grad(X_ind, C_ind, W) + 0.001 * W
             W = W - lr * curr_grad
 
-        success_training.append(check_success(Xt, Ct, W))
-        success_validation.append(check_success(Xv, Cv, W))
+        success_training.append(check_success(Xt, Ct, W, classify))
+        success_validation.append(check_success(Xv, Cv, W, classify))
 
     return W, success_training, success_validation
 
 
-def clasify(X, W):
+def classify(X, W):
     l = len(W[0])
     m = len(X[0])
     prob = softmax(X, W)
@@ -36,13 +35,6 @@ def clasify(X, W):
     clasify_matrix = np.zeros((l, m))
     clasify_matrix[labels, np.arange(m)] = 1
     return clasify_matrix
-
-
-def check_success(X, C, W):
-    m = len(X[0])
-    clasify_matrix = clasify(X, W)
-    no_success = np.sum(abs(C - clasify_matrix)) / (2 * m)
-    return 1 - no_success
 
 
 def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
@@ -54,9 +46,8 @@ def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
     W = np.random.rand(n, l)
     W, success_percentage_train, success_percentage_validation = SGD(softmax_regression_grad, Xt, Ct, Xv, Cv, W,
                                                                      epochs, batch, lr)
-    plot(success_percentage_train, success_percentage_validation, type, lr, batch, title="Softmax minimization using SGD")
-
-
+    plot(success_percentage_train, success_percentage_validation, type, lr, batch,
+         title="Softmax minimization using SGD")
 
 
 # test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.1, batch=20)

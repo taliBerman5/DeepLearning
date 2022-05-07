@@ -114,8 +114,8 @@ def update_parameters(parameters, grads, lr):
 
 def SGD_resnet(Xt, Yt, Xv, Yv, layers_dims, epochs, batch, lr):
     parameters = init_params(layers_dims, D=0)
-    success_training = [check_success(Xt, Yt, parameters)]
-    success_validation = [check_success(Xv, Yv, parameters)]
+    success_training = [check_success(Xt, Yt, parameters, classify_resnet)]
+    success_validation = [check_success(Xv, Yv, parameters, classify_resnet)]
     costs = []
     m = len(Xt[0])
     for i in range(epochs):
@@ -135,13 +135,13 @@ def SGD_resnet(Xt, Yt, Xv, Yv, layers_dims, epochs, batch, lr):
         AL, caches = forward_pass(Xt, parameters, np.tanh)
         A_prev, W1, W2, b = caches[-1][0]
         costs.append(softmax_regression(A_prev, W1, b, Yt))
-        success_training.append(check_success(Xt, Yt, parameters))
-        success_validation.append(check_success(Xv, Yv, parameters))
+        success_training.append(check_success(Xt, Yt, parameters, classify_resnet))
+        success_validation.append(check_success(Xv, Yv, parameters, classify_resnet))
 
     return parameters, success_training, success_validation
 
 
-def clasify(X, parameters):
+def classify_resnet(X, parameters):
     m = len(X[0])
     L = len(parameters) // 3
     l = len(parameters["b" + str(L)])
@@ -151,12 +151,6 @@ def clasify(X, parameters):
     clasify_matrix[labels, np.arange(m)] = 1
     return clasify_matrix
 
-
-def check_success(X, C, parameters):
-    m = len(X[0])
-    clasify_matrix = clasify(X, parameters)
-    no_success = np.sum(abs(clasify_matrix - C)) / (2 * m)
-    return 1 - no_success
 
 
 def update_parameters_grad_test(parameters, parameters_D, eps):
@@ -267,7 +261,7 @@ def stack_parametersD(parameters_D):
     stack.append(parameters_D["b" + str(l)].flatten())
     return np.concatenate(stack, axis=0)
 
-def grad_Test_nn_resnet():
+def grad_Test_resnet():
     X = Yt_Peaks
     Y = Ct_Peaks
     eps = 0.1
@@ -325,9 +319,9 @@ def test_data_200(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
 
 # jacobian_test_WB_resnet()
 # jacobian_test_X_resnet()
-grad_Test_nn_resnet()
+grad_Test_resnet()
 
-# test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 10], "Swiss Roll", lr=0.5, batch=100)
+test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 10], "Swiss Roll", lr=0.5, batch=100)
 # test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 10], "Swiss Roll", lr=0.5, batch=100)
 #
 # test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 10], "Peaks", lr=0.1, batch=100)

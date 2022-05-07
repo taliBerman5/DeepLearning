@@ -76,7 +76,7 @@ def update_parameters(parameters, grads, lr):
     return parameters
 
 
-def clasify(X, parameters):
+def classify_nn(X, parameters):
     m = len(X[0])
     L = len(parameters) // 2
     l = len(parameters["b" + str(L)])
@@ -87,17 +87,11 @@ def clasify(X, parameters):
     return clasify_matrix
 
 
-def check_success(X, C, parameters):
-    m = len(X[0])
-    clasify_matrix = clasify(X, parameters)
-    no_success = np.sum(abs(clasify_matrix - C)) / (2 * m)
-    return 1 - no_success
-
 
 def SGD_nn(Xt, Yt, Xv, Yv, layers_dims, epochs, batch, lr):
     parameters = init_params(layers_dims, D=0)
-    success_training = [check_success(Xt, Yt, parameters)]
-    success_validation = [check_success(Xv, Yv, parameters)]
+    success_training = [check_success(Xt, Yt, parameters, classify_nn)]
+    success_validation = [check_success(Xv, Yv, parameters, classify_nn)]
     costs = []
     m = len(Xt[0])
     for i in range(epochs):
@@ -117,8 +111,8 @@ def SGD_nn(Xt, Yt, Xv, Yv, layers_dims, epochs, batch, lr):
         AL, caches = forward_pass(Xt, parameters, np.tanh)
         A_prev, W, b = caches[-1][0]
         costs.append(softmax_regression(A_prev, W, b, Yt))
-        success_training.append(check_success(Xt, Yt, parameters))
-        success_validation.append(check_success(Xv, Yv, parameters))
+        success_training.append(check_success(Xt, Yt, parameters, classify_nn))
+        success_validation.append(check_success(Xv, Yv, parameters, classify_nn))
 
     return parameters, success_training, success_validation
 

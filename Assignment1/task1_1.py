@@ -38,18 +38,22 @@ def grad_test():
     C = Ct
     X = np.vstack((X, np.ones(len(X[0]))))  # added dimension for the bias
     epsilon = 0.1
+
     n = len(X)
     l = len(C)
+
     W = np.random.rand(n, l)
+
     D = np.random.rand(n, l)
     D = (1 / LA.norm(D)) * D  # normelize to 1
+
     F0 = softmax_regression(X, C, W)
     g0 = softmax_regression_grad(X, C, W)
     linearly_grad_test = []
     quadratically_grad_test = []
     for k in range(20):
         Fk = softmax_regression(X, C, W + epsilon * D)
-        F1 = F0 + epsilon * (np.ndarray.flatten(g0, 'F') @ np.ndarray.flatten(D, 'F'))
+        F1 = F0 + epsilon * (np.ndarray.flatten(g0) @ np.ndarray.flatten(D))
         linearly_grad_test.append(abs(Fk - F0))
         quadratically_grad_test.append(abs(Fk - F1))
         epsilon = epsilon * 0.5
@@ -59,5 +63,6 @@ def grad_test():
 
 
 
-
 grad_test()
+
+

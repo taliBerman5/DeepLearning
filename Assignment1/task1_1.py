@@ -4,13 +4,10 @@ import numpy.linalg as LA
 from Assignment1.calculations import plot_grad_test
 
 GMM = sio.loadmat('GMMData.mat')
-Peaks = sio.loadmat('PeaksData.mat')
-SwissRoll = sio.loadmat('SwissRollData.mat')
-
-Ct = SwissRoll["Ct"]
-Cv = SwissRoll["Cv"]
-Yt = SwissRoll["Yt"]
-Yv = SwissRoll["Yv"]
+Ct = GMM["Ct"]
+Cv = GMM["Cv"]
+Yt = GMM["Yt"]
+Yv = GMM["Yv"]
 
 
 def eta_calc(X, W):
@@ -29,7 +26,7 @@ def softmax_regression(X, C, W):
 
 def softmax_regression_grad(X, C, W):
     n, m = np.shape(X)
-    gradf = X @ (softmax(X, W).T - C.T)
+    gradf = X @ (softmax(X, W) - C).T
     return 1 / m * gradf
 
 
@@ -49,16 +46,16 @@ def grad_test():
 
     F0 = softmax_regression(X, C, W)
     g0 = softmax_regression_grad(X, C, W)
-    linearly_grad_test = []
-    quadratically_grad_test = []
+    zero_loss = []
+    one_loss = []
     for k in range(20):
         Fk = softmax_regression(X, C, W + epsilon * D)
         F1 = F0 + epsilon * (np.ndarray.flatten(g0) @ np.ndarray.flatten(D))
-        linearly_grad_test.append(abs(Fk - F0))
-        quadratically_grad_test.append(abs(Fk - F1))
+        zero_loss.append(abs(Fk - F0))
+        one_loss.append(abs(Fk - F1))
         epsilon = epsilon * 0.5
 
-    plot_grad_test(linearly_grad_test, quadratically_grad_test, "Grad test for softmax regression")
+    plot_grad_test(zero_loss, one_loss, "Grad test for softmax regression")
 
 
 

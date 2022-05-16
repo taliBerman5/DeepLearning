@@ -42,7 +42,7 @@ def grad_test():
     W = np.random.rand(n, l)
 
     D = np.random.rand(n, l)
-    D = (1 / LA.norm(D)) * D  # normelize to 1
+    D = (1 / LA.norm(D)) * D  # normalize to 1
 
     F0 = softmax_regression(X, C, W)
     g0 = softmax_regression_grad(X, C, W)
@@ -60,6 +60,5 @@ def grad_test():
 
 
 
-grad_test()
-
+# grad_test()
 

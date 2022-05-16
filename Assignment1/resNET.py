@@ -152,7 +152,6 @@ def classify_resnet(X, parameters):
     return clasify_matrix
 
 
-
 def update_parameters_grad_test(parameters, parameters_D, eps):
     L = len(parameters) // 3
     new_parameters = {}
@@ -161,7 +160,6 @@ def update_parameters_grad_test(parameters, parameters_D, eps):
         new_parameters["W2_" + str(l)] = parameters["W2_" + str(l)] + eps * parameters_D["W2_" + str(l)]
         new_parameters["b" + str(l)] = parameters["b" + str(l)] + eps * parameters_D["b" + str(l)]
     return new_parameters
-
 
 
 def jacobian_test_WB_resnet():
@@ -193,14 +191,14 @@ def jacobian_test_WB_resnet():
         w2_eps_k = W2 + epsilon * D_W2
         b_eps_k = b + epsilon * D_b
         fk = g(X + w2_eps_k @ np.tanh(w1_eps_k @ X + b_eps_k), u).flatten()
-        f1 = f0 + epsilon * (np.ndarray.flatten(D_W1) @ np.ndarray.flatten(dW1)) + epsilon * (np.ndarray.flatten(D_W2) @ np.ndarray.flatten(dW2)) + epsilon * (np.ndarray.flatten(D_b) @ np.ndarray.flatten(db))
+        f1 = f0 + epsilon * (np.ndarray.flatten(D_W1) @ np.ndarray.flatten(dW1)) + epsilon * (
+                np.ndarray.flatten(D_W2) @ np.ndarray.flatten(dW2)) + epsilon * (
+                     np.ndarray.flatten(D_b) @ np.ndarray.flatten(db))
         zero_loss.append(abs(fk - f0))
         one_loss.append(abs(fk - f1))
         epsilon *= 0.5
 
-    plot_grad_test(zero_loss, one_loss, 'resNet \nJacobian transpose test for the derivative of the layer by W and b')
-
-
+    plot_grad_test(zero_loss, one_loss, 'resNet \nJacobian test by W and b')
 
 
 def jacobian_test_X_resnet():
@@ -227,7 +225,8 @@ def jacobian_test_X_resnet():
         zero_loss.append(abs(fk - f0))
         one_loss.append(abs(fk - f1))
         epsilon *= 0.5
-    plot_grad_test(zero_loss, one_loss, 'resNet\nJacobian transpose test for the derivative of the layer by X')
+    plot_grad_test(zero_loss, one_loss, 'resNet\nJacobian test by X')
+
 
 def stack_w_b_grads(grads):
     stack = []
@@ -261,6 +260,7 @@ def stack_parametersD(parameters_D):
     stack.append(parameters_D["b" + str(l)].flatten())
     return np.concatenate(stack, axis=0)
 
+
 def grad_Test_resnet():
     X = Yt_Peaks
     Y = Ct_Peaks
@@ -283,8 +283,8 @@ def grad_Test_resnet():
         new_parameters = update_parameters_grad_test(parameters, parameters_D, eps)
         AL, caches = forward_pass(X, new_parameters, np.tanh)
         fK = softmax_regression(caches[-1][0][0], new_parameters["W1_" + str(num_params)],
-                                   new_parameters["b" + str(num_params)],
-                                   Y)
+                                new_parameters["b" + str(num_params)],
+                                Y)
 
         f1 = f0 + eps * stack_grads @ stack_parameters_D
 
@@ -307,25 +307,25 @@ def test_data(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
 
 
 def test_data_200(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
-    epochs = 100
+    epochs = 200
     n = len(Xt)
     l = len(Ct)
     layer_dims = [n] + hidden_layer + [l]
     X_200, C_200 = sample(Xt, Ct, 200)
 
     parameters, success_training, success_validation = SGD_resnet(X_200, C_200, Xv, Cv, layer_dims, epochs, batch, lr)
-    plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD - 200 training samples")
+    plot(success_training, success_validation, type, lr, batch, title="resNet using SGD - 200 training samples")
 
 
 # jacobian_test_WB_resnet()
 # jacobian_test_X_resnet()
-grad_Test_resnet()
-
-test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 10], "Swiss Roll", lr=0.5, batch=100)
+# grad_Test_resnet()
+#
+# test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10,10,10], "Swiss Roll", lr=0.5, batch=1000)
 # test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 10], "Swiss Roll", lr=0.5, batch=100)
 #
-# test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 10], "Peaks", lr=0.1, batch=100)
+# test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 10], "Peaks", lr=0.5, batch=100)
 # test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 10], "Peaks", lr=0.1, batch=100)
 #
-# test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 10], "GMM", lr=0.5, batch=100)
+# test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10,10,10], "GMM", lr=0.5, batch=100)
 # test_data_200(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 10], "GMM", lr=0.5, batch=100)

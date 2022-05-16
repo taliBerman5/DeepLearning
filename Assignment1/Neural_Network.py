@@ -58,7 +58,6 @@ def backpropagation(AL, Y, caches):
     for l in reversed(range(L - 1)):
         current_cache = caches[l]
         A_prev, W, b = current_cache[0]
-        Zl = current_cache[1]
         dAl = grads["dA" + str(l + 2)]
         grads["dA" + str(l + 1)], grads["dW" + str(l + 1)], grads["db" + str(l + 1)] = linear_backward(
             (calc_tanh_grad(W @ A_prev + b)) * dAl, current_cache[0])
@@ -175,7 +174,7 @@ def jacobian_test_WB():
         one_loss.append(abs(fk - f1))
         epsilon *= 0.5
 
-    plot_grad_test(zero_loss, one_loss, 'Jacobian transpose test for the derivative of the layer by W and b')
+    plot_grad_test(zero_loss, one_loss, 'Jacobian test by W and b')
 
 
 def jacobian_test_X():
@@ -200,7 +199,7 @@ def jacobian_test_X():
         zero_loss.append(abs(fk - f0))
         one_loss.append(abs(fk - f1))
         epsilon *= 0.5
-    plot_grad_test(zero_loss, one_loss, 'Jacobian transpose test for the derivative of the layer by X')
+    plot_grad_test(zero_loss, one_loss, 'Jacobian test by X')
 
 
 def grad_Test_nn():
@@ -260,15 +259,15 @@ def test_data_200(Xt, Ct, Xv, Cv, hidden_layer, type, lr, batch):
     plot(success_training, success_validation, type, lr, batch, title="Neural Network using SGD - 200 training samples")
 
 
-test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
-test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
-
-test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
-test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
-
-test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
-test_data_200(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
-
-jacobian_test_WB()
-jacobian_test_X()
-grad_Test_nn()
+# test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [7,10 ,4], "Swiss Roll", lr=0.5, batch=100)
+# test_data_200(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, [10, 10, 4], "Swiss Roll", lr=0.5, batch=100)
+#
+# test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
+# test_data_200(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, [10, 10, 4], "Peaks", lr=0.1, batch=100)
+#
+# test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [7,10,4], "GMM", lr=0.5, batch=1000)
+# test_data_200(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, [10, 10, 4], "GMM", lr=0.5, batch=100)
+#
+# jacobian_test_WB()
+# jacobian_test_X()
+# grad_Test_nn()

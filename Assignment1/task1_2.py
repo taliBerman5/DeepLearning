@@ -48,6 +48,8 @@ def LS_test():
 
     w, norms = SGD(LS_grad, X, Y, w, epochs=1000)
     plot(norms)
-    print(w)
+    print(f'SGD result: {w}')
+    print(f'Exact result: {np.linalg.inv(X.T @ X) @ X.T @ Y}')
 
-LS_test()
+# LS_test()
+

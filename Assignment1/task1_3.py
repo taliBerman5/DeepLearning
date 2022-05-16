@@ -23,6 +23,8 @@ def SGD(Grad, Xt, Ct, Xv, Cv, W, epochs, batch, lr):
 
         success_training.append(check_success(Xt, Ct, W, classify))
         success_validation.append(check_success(Xv, Cv, W, classify))
+    print(f"success training: {success_training[-1]}")
+    print(f"success validation: {success_validation[-1]}")
 
     return W, success_training, success_validation
 
@@ -51,5 +53,5 @@ def test_data(Xt, Ct, Xv, Cv, type, lr, batch):
 
 
 # test_data(Yt_SwissRoll, Ct_SwissRoll, Yv_SwissRoll, Cv_SwissRoll, "Swiss Roll", lr=0.1, batch=20)
-test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, "GMM", lr=0.1, batch=200)
-test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, "Peaks", lr=0.1, batch=200)
+# test_data(Yt_GMM, Ct_GMM, Yv_GMM, Cv_GMM, "GMM", lr=0.1, batch=20)
+# test_data(Yt_Peaks, Ct_Peaks, Yv_Peaks, Cv_Peaks, "Peaks", lr=0.1, batch=20)

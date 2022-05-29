@@ -89,8 +89,8 @@ for epoch in range(2):
         outputs = model(inputs.to(device))
         loss = criterion(outputs, labels)
 
-        # backword pass
-        loss.backwod()
+        # backward pass
+        loss.backward()
         opt.step()
 
         # print stats

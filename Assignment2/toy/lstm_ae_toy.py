@@ -129,6 +129,7 @@ def grid_search():
         if curr_loss < best_loss:
             best_loss = curr_loss
             best_ind = i
+        print(f'{i}- params: hidden state size = {param[0]}, learning rate = {param[1]}, gradient clipping = {param[2]}, loss = {curr_loss}')
     print("Best parameters found")
     best_model = AE_TOY(*parameters[best_ind])
     best_model.plot()

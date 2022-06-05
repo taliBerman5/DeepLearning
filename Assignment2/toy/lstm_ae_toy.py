@@ -43,7 +43,7 @@ class AE_TOY():
         amount_data = self.train_data.size(dim=0)
         model = self.auto_encoder.to(self.device)
         criterion = torch.nn.MSELoss().to(self.device)
-        stepper = torch.optim.lr_scheduler.StepLR(self.optimizer, 100, 0.5)
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 100, 0.5)
 
         train_loss = []
         validation_loss = []
@@ -70,7 +70,7 @@ class AE_TOY():
                 self.optimizer.step()
                 curr_loss += loss.item()
 
-            stepper.step()
+            lr_scheduler.step()
             train_loss.append(curr_loss / math.floor(amount_data / self.batch))
 
             v_data = self.validation_data.to(self.device)

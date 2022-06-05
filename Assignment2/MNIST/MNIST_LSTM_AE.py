@@ -33,11 +33,11 @@ class Decoder(nn.Module):
     def forward(self, z):
         z = z.repeat(1, self.seq_sz, 1)
         output, (h_t, _) = self.lstm_decoder(z)
-        return torch.tanh(self.linear(output)), F.softmax(self.linear_classification(h_t))
+        return torch.tanh(self.linear(output)), F.softmax(self.linear_classification(h_t), dim=1)
 
-class LSTM_AE(nn.Module):
+class LSTM_AEC(nn.Module):
     def __init__(self, input_sz, hidden_state_sz, num_layers, dropout, seq_sz, output_sz):
-        super(LSTM_AE, self).__init__()
+        super(LSTM_AEC, self).__init__()
         self.input_sz = input_sz
         self.hidden_state_sz = hidden_state_sz
         self.num_layers = num_layers

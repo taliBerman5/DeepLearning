@@ -15,7 +15,7 @@ testset = torchvision.datasets.MNIST(root="../data/", train=False, download=True
 testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset), shuffle=False)
 
 batch = 100
-epochs = 20
+epochs = 1
 optimizer = torch.optim.Adam
 hidden_state_sz = 20
 num_layers = 1
@@ -93,7 +93,7 @@ class AE_MNIST():
 
         test_iter = iter(self.test_loader)
         test_images, test_labels = test_iter.next()
-        reconstruction = self.reconstruct(test_images[:2]).detach().cpu().squeeze().numpy()
+        reconstruction = self.reconstruct(test_images[:2].squeeze()).detach().cpu().squeeze().numpy()
 
         for i in range(3):
             plt.plot(test_images[i], label="original signal")

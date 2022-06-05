@@ -63,7 +63,7 @@ class AE_TOY():
                 outputs = model(train_ind)
                 loss = criterion(outputs, train_ind)
 
-                # backword pass
+                # backward pass
                 loss.backward()
                 if grad_clip:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), self.grad_clip)

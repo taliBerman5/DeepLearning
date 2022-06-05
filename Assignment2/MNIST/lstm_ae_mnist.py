@@ -4,7 +4,7 @@ import torchvision
 import matplotlib.pyplot as plt
 import numpy as np
 import torchvision.transforms as transforms
-import torch.nn.functional as F
+
 from Assignment2.LSTM_AE import LSTM_AE as AE
 import math
 
@@ -22,7 +22,7 @@ num_layers = 1
 lr = 0.01
 input_sz = 28
 dropout = 0
-seq_sz = 50
+seq_sz = 28
 output_sz = 28
 grad_clip = None
 
@@ -95,7 +95,7 @@ class AE_MNIST():
         test_images, test_labels = test_iter.next()
         reconstruction = self.reconstruct(test_images[:2]).detach().cpu().squeeze().numpy()
 
-        for i in range(2):
+        for i in range(3):
             plt.plot(test_images[i], label="original signal")
             plt.plot(reconstruction[i], label="reconstruction")
             plt.legend()

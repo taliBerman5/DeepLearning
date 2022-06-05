@@ -1,13 +1,11 @@
-import torch.optim as optim
 import torch
 import torchvision
 import matplotlib.pyplot as plt
 import numpy as np
 import torchvision.transforms as transforms
-
 from Assignment2.LSTM_AE import LSTM_AE as AE
 from Assignment2.MNIST.MNIST_LSTM_AE import LSTM_AEC as AEC
-import math
+
 
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081))])
 trainset = torchvision.datasets.MNIST(root="./data/", train=True, download=True, transform=transform)
@@ -16,11 +14,12 @@ testset = torchvision.datasets.MNIST(root="./data/", train=False, download=True,
 testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset), shuffle=False)
 
 batch = 100
-epochs = 10
+epochs = 50
 optimizer = torch.optim.Adam
 hidden_state_sz = 20
+hidden_state_sz_pixel = 500
 num_layers = 1
-lr = 0.01
+lr = 0.001
 input_sz = 28
 dropout = 0
 seq_sz = 28
@@ -48,6 +47,7 @@ class AE_MNIST():
         self.input_sz_pixel = input_sz_pixel
         self.output_sz_pixel = output_sz_pixel
         self.seq_sz_pixel = seq_sz_pixel
+        self.hidden_state_sz_pixel = hidden_state_sz_pixel
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.AE = AE(self.input_sz, self.hidden_state_sz, self.num_layers, self.dropout, self.seq_sz,
                      self.output_sz)
@@ -55,7 +55,7 @@ class AE_MNIST():
         self.AEC = AEC(self.input_sz, self.hidden_state_sz, self.num_layers, self.dropout, self.seq_sz,
                        self.output_sz)
         self.optimizer_aec = optimizer(self.AEC.parameters(), lr=self.lr)
-        self.AEC_pixel = AEC(self.input_sz_pixel, self.hidden_state_sz, self.num_layers, self.dropout,
+        self.AEC_pixel = AEC(self.input_sz_pixel, self.hidden_state_sz_pixel, self.num_layers, self.dropout,
                              self.seq_sz_pixel,
                              self.output_sz_pixel)
         self.optimizer_aec_pixel = optimizer(self.AEC_pixel.parameters(), lr=self.lr)
@@ -63,7 +63,7 @@ class AE_MNIST():
     def train(self):
         model = self.AE.to(self.device)
         criterion = torch.nn.MSELoss().to(self.device)
-        stepper = torch.optim.lr_scheduler.StepLR(self.optimizer, 100, 0.5)
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 100, 0.5)
 
         train_loss = []
 
@@ -86,7 +86,7 @@ class AE_MNIST():
                 self.optimizer.step()
                 curr_loss += loss.item()
 
-            stepper.step()
+            lr_scheduler.step()
             train_loss.append(curr_loss / len(self.train_loader))
 
         return train_loss
@@ -96,13 +96,13 @@ class AE_MNIST():
         criterion_MSE = torch.nn.MSELoss().to(self.device)
         criterion_CE = torch.nn.CrossEntropyLoss().to(self.device)
         optimizer = self.optimizer_aec if isRow else self.optimizer_aec_pixel
-        lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 100, 0.5)
+        #lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 100, 0.5)
 
         test_iter = iter(self.test_loader)
         test_images, test_labels = test_iter.next()
-        test_ind = test_images.squeeze().to(self.device)
+        test_images = test_images.squeeze().to(self.device)
         test_labels = test_labels.to(self.device)
-        test_ind = test_ind if isRow else test_ind.view(test_ind.shape[0], self.seq_sz_pixel, -1)
+        test_images = test_images if isRow else test_images.view(test_images.shape[0], self.seq_sz_pixel, -1)
 
         train_loss = []
         train_acc = []
@@ -124,7 +124,7 @@ class AE_MNIST():
                 # forward pass
                 outputs, classification = model(train_ind)
                 loss_MSE = criterion_MSE(outputs, train_ind)
-                loss_CE = criterion_CE(classification.squeeze(), labels)  # TODO: maybe add squeeze to class
+                loss_CE = criterion_CE(classification.squeeze(), labels)
 
                 loss = (loss_MSE + loss_CE) / 2
 
@@ -136,19 +136,25 @@ class AE_MNIST():
                 curr_loss += loss.item()
                 curr_acc += self.accuracy(classification, labels)
 
-            lr_scheduler.step()
+            #lr_scheduler.step()
             train_loss.append(curr_loss / len(self.train_loader))
             train_acc.append(curr_acc / len(self.train_loader))
 
-            outputs_test, classification_test = model(test_ind)
-            loss_MSE_test = criterion_MSE(outputs_test, test_ind)
-            test_loss.append(loss_MSE_test.item())
+            outputs_test, classification_test = model(test_images)
+            loss_MSE_test = criterion_MSE(outputs_test, test_images)
+            loss_CE_test = criterion_CE(classification_test.squeeze(), test_labels)
+            loss_test = (loss_MSE_test + loss_CE_test) / 2
+            test_loss.append(loss_test.item())
             test_acc.append(self.accuracy(classification_test, test_labels))
 
         return train_loss, train_acc, test_loss, test_acc
 
     def reconstruct(self, data):
         return self.AE.to(self.device).forward(data.to(self.device))
+
+    def reconstruct_classification(self, data, isRow):
+        return self.AEC.to(self.device).forward(data.to(self.device)) if isRow else self.AEC_pixel.to(
+                self.device)(data.to(self.device))
 
     def accuracy(self, prob, labels):
         prediction = np.argmax(prob.squeeze().detach().cpu().numpy(), axis=1)
@@ -190,19 +196,45 @@ class AE_MNIST():
         plt.legend()
         plt.xlabel("Epochs")
         plt.ylabel("Loss")
+        row_title = "by Row" if isRow else "by pixel"
         plt.title(
-            f'MNIST LSTM loss \n hidden state size = {self.hidden_state_sz}, learning rate = {self.lr}, gradient clipping = {self.grad_clip}')
+            f'MNIST LSTM loss {row_title} \n hidden state size = {self.hidden_state_sz}, learning rate = {self.lr}, gradient clipping = {self.grad_clip}')
         plt.show()
 
-        plt.plot(x, train_loss, label="Train Accuracy")
-        plt.plot(x, test_loss, label="Test Accuracy")
+        plt.plot(x, train_acc, label="Train Accuracy")
+        plt.plot(x, test_acc, label="Test Accuracy")
         plt.legend()
         plt.xlabel("Epochs")
         plt.ylabel("Accuracy")
         plt.title(
-            f'MNIST LSTM Accuracy \n hidden state size = {self.hidden_state_sz}, learning rate = {self.lr}, gradient clipping = {self.grad_clip}')
+            f'MNIST LSTM Accuracy {row_title} \n hidden state size = {self.hidden_state_sz}, learning rate = {self.lr}, gradient clipping = {self.grad_clip}')
+        plt.show()
+
+
+        amount_img = 3
+        test_iter = iter(self.test_loader)
+        test_images, test_labels = test_iter.next()
+        test_images = test_images[:amount_img].squeeze()
+        test_images = test_images if isRow else test_images.view(test_images.shape[0], self.seq_sz_pixel, -1)
+        reconstruction, labels = self.reconstruct_classification(test_images, isRow)
+        reconstruction = reconstruction.detach().cpu().squeeze().numpy()
+        reconstruction = reconstruction if isRow else reconstruction.view(28, 28)
+
+        f, axs = plt.subplots(2, amount_img)
+
+        for i in range(amount_img):
+            axs[1, i].set_title(f"predicted label:{test_labels[i]}")
+            axs[0, i].imshow(test_images[i], cmap='gray')
+            axs[1, i].imshow(reconstruction[i], cmap='gray')
+
+        axs[0, 0].set_ylabel("original")
+        axs[1, 0].set_ylabel("constructed")
+        plt.suptitle("Origin vs Reconstructed images")
         plt.show()
 
 
 ae = AE_MNIST(hidden_state_sz=hidden_state_sz, lr=lr, grad_clip=grad_clip)
 ae.plot_classification(isRow=1)
+
+
+

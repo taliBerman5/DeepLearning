@@ -49,7 +49,6 @@ class AE_TOY():
         validation_loss = []
 
         for epoch in range(self.epochs):
-            print(f'started epoch {epoch}')
             rnd_ind = np.random.permutation(amount_data)
 
             curr_loss = 0
@@ -123,6 +122,7 @@ def grid_search():
     best_loss = np.inf
     best_ind = 0
     for i, param in enumerate(parameters):
+        print(f'started param {i}')
         model = AE_TOY(*param)
         _, validation_loss = model.train()
         curr_loss = validation_loss[-1]

@@ -16,7 +16,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset), shuff
 batch = 100
 epochs = 50
 optimizer = torch.optim.Adam
-hidden_state_sz = 20
+hidden_state_sz = 27
 hidden_state_sz_pixel = 500
 num_layers = 1
 lr = 0.001

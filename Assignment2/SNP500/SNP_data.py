@@ -29,10 +29,10 @@ def split_data(stocks):
     mean_test, std_test = normalize(test_data)
 
     return {'dates:': np.asarray(dates[:1]).flatten(),
-            'train_data': torch.FloatTensor(train_data),
+            'train_set': torch.FloatTensor(train_data),
             'train_mean': mean_train,
             'train_std': std_train,
-            'test_data': torch.FloatTensor(test_data),
+            'test_set': torch.FloatTensor(test_data),
             'test_mean': mean_test,
             'test_std': std_test,
             }
@@ -60,6 +60,13 @@ def normalize(data):
         mean_data.append(curr_mean)
         std_data.append(curr_std)
     return mean_data, std_data
+
+
+def revert_normalize(data, data_mean, data_std):
+    for i in range(len(data)):
+        for j in range(len(data[i])):
+            data[i][j] = data[i][j] * data_std[i][j] + data_mean[i][j]
+
 
 set_seed(1)
 split_data(parse())

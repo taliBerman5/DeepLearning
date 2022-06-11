@@ -7,11 +7,7 @@ from Assignment2.LSTM_AE import LSTM_AE as AE
 from Assignment2.MNIST.MNIST_LSTM_AE import LSTM_AEC as AEC
 
 
-transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081))])
-trainset = torchvision.datasets.MNIST(root="./data/", train=True, download=True, transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True)
-testset = torchvision.datasets.MNIST(root="./data/", train=False, download=True, transform=transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset), shuffle=False)
+
 
 batch = 100
 epochs = 50
@@ -28,6 +24,13 @@ input_sz_pixel = 1
 seq_sz_pixel = 784
 output_sz_pixel = 1
 grad_clip = None
+
+
+transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081))])
+trainset = torchvision.datasets.MNIST(root="./data/", train=True, download=True, transform=transform)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch, shuffle=True)
+testset = torchvision.datasets.MNIST(root="./data/", train=False, download=True, transform=transform)
+testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset), shuffle=False)
 
 
 class AE_MNIST():
@@ -182,7 +185,7 @@ class AE_MNIST():
         f, axs = plt.subplots(2, amount_img)
 
         for i in range(amount_img):
-            axs[0, i].imshow(test_images[i], cmap='gray')
+            axs[0, i].imshow(test_images[i] / 0.3081 + 0.1307, cmap='gray')
             axs[1, i].imshow(reconstruction[i], cmap='gray')
 
         axs[0, 0].set_ylabel("original")
@@ -226,7 +229,7 @@ class AE_MNIST():
 
         for i in range(amount_img):
             axs[1, i].set_title(f"predicted label:{test_labels[i]}")
-            axs[0, i].imshow(test_images[i], cmap='gray')
+            axs[0, i].imshow(test_images[i] / 0.3081 + 0.1307, cmap='gray')
             axs[1, i].imshow(reconstruction[i], cmap='gray')
 
         axs[0, 0].set_ylabel("original")

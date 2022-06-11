@@ -150,11 +150,13 @@ class AE_MNIST():
         return train_loss, train_acc, test_loss, test_acc
 
     def reconstruct(self, data):
-        return self.AE.to(self.device).forward(data.to(self.device))
+        return self.AE.to(self.device).forward(data.to(self.device)) / 0.3081 + 0.1307
 
     def reconstruct_classification(self, data, isRow):
-        return self.AEC.to(self.device).forward(data.to(self.device)) if isRow else self.AEC_pixel.to(
-                self.device)(data.to(self.device))
+        reconstruction, labels = self.AEC.to(self.device).forward(data.to(self.device)) if isRow else self.AEC_pixel.to(
+            self.device)(data.to(self.device))
+
+        return reconstruction / 0.3081 + 0.1307, labels
 
     def accuracy(self, prob, labels):
         prediction = np.argmax(prob.squeeze().detach().cpu().numpy(), axis=1)

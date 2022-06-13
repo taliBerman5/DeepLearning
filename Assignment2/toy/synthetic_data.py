@@ -32,8 +32,8 @@ def plot_toy_sample(samples):
         plt.show()
 
 
-# samples = create_toy_data()
-# plot_toy_sample(samples)
+samples = create_toy_data()
+plot_toy_sample(samples)
 
 
 

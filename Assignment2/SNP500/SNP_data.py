@@ -18,6 +18,7 @@ def parse():
 def split_data(stocks):
     stocks = stocks[["symbol", "high", "date"]]
     stocks_group = stocks.groupby('symbol')
+    stocks_symbol = np.asarray(stocks[["symbol"]].drop_duplicates())
     data = stocks_group['high'].apply(lambda x: pd.Series(x.values)).unstack()
     data.interpolate(inplace=True)  # fill the missing values
     dates = stocks_group['date'].apply(lambda x: pd.Series(x.values)).unstack()
@@ -27,14 +28,18 @@ def split_data(stocks):
     test_data = np.asarray(np.array_split(data_values[test_ind], 19, axis=1)).transpose((1, 0, 2))     #split into n sub-sequences
     mean_train, std_train = normalize(train_data)
     mean_test, std_test = normalize(test_data)
+    stocks_train_name = stocks_symbol[train_ind]
+    stocks_test_name = stocks_symbol[test_ind]
 
-    return {'dates:': np.asarray(dates[:1]).flatten(),
+    return {'dates': np.asarray(dates[:1]).flatten(),
             'train_set': torch.FloatTensor(train_data),
             'train_mean': mean_train,
             'train_std': std_train,
+            'train_name': stocks_train_name,
             'test_set': torch.FloatTensor(test_data),
             'test_mean': mean_test,
             'test_std': std_test,
+            'test_name': stocks_test_name
             }
 
 

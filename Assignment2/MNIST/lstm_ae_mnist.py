@@ -23,7 +23,7 @@ output_sz = 28
 input_sz_pixel = 1
 seq_sz_pixel = 784
 output_sz_pixel = 1
-grad_clip = None
+grad_clip = 1
 
 
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081))])

@@ -7,7 +7,7 @@ from Assignment2.LSTM_AE import LSTM_AE as AE
 from Assignment2.SNP500.SNP_LSTM_AE import LSTM_AEP as AEP
 
 batch = 8
-epochs = 50
+epochs = 1
 optimizer = torch.optim.Adam
 hidden_state_sz = 50
 num_layers = 1
@@ -134,7 +134,6 @@ class AE_SNP500():
 
         return total_loss, reconstruct_loss, predict_loss
 
-
     def reconstruct(self, data):
         data = torch.flatten(data, 0, 1).unsqueeze(2).to(self.device)
         reconstruct = self.AE.to(self.device).forward(data.to(self.device))
@@ -202,7 +201,34 @@ class AE_SNP500():
             plt.legend()
             plt.show()
 
+    def plot_multi_predict(self):
+        self.train_predict()
 
+        test_iter = iter(self.test_loader)
+        test_data = test_iter.next()
+        test_data = test_data[:, :-1]  # to make the amount of sub-sequence even
+        test_first_half = test_data[:, :int(test_data.shape[1]/2)].squeeze()
+        test_second_half = test_data[:, int(test_data.shape[1]/2):].squeeze()
+        predicted_arr = self.auto_regression(test_first_half)
+
+        amount_img = 2
+        test_data, reconstruction = self.get_reconstruct_and_test(amount_img, self.reconstruct_predict)
+
+        test_data = torch.flatten(test_data, 0, 1).unsqueeze(2)
+        y = test_data[:, 1:].view(-1, 19, 52)
+        y, reconstruction = self.revert_normalize_data(y, reconstruction)
+        dates = data_dict['dates'].reshape(53, 19)[:-1].flatten()
+
+        for i in range(amount_img):
+            fig, axes = plt.subplots()
+            axes.xaxis.set_major_locator(MaxNLocator(5))
+            plt.plot(dates, y[i].flatten(), label='original')
+            plt.plot(dates, reconstruction[i].flatten(), label='predicted')
+            plt.title(f"Original vs predicted one step, symbol={data_dict['test_name'][i][0]}")
+            plt.xlabel("Date")
+            plt.ylabel("High Rate")
+            plt.legend()
+            plt.show()
 
     def get_reconstruct_and_test(self, amount_img, reconstruct_func):
         test_iter = iter(self.test_loader)
@@ -218,7 +244,20 @@ class AE_SNP500():
 
         return test_images, reconstruction
 
+    def auto_regression(self, data):
+        data_0, data_1, _ = data.shape
+        iter = data.shape[1] * data.shape[2]
+        model = self.AEP.to(self.device)
+        predicted_arr = torch.empty(data.shape[0], 1).to(self.device)
+        data = torch.flatten(data, 0, 1).unsqueeze(2)[:, :-1].to(self.device)
+        for i in range(iter):
+            _, predict = model.forward(data)
+            last_predicted = predict[:, -1:].unsqueeze(2)
+            data = torch.cat((data[:, 1:], last_predicted[:, -1:]), dim=1)
+            predicted_arr = torch.cat((predicted_arr, predict.view(data_0, data_1, -1).flatten(1,2)[:, -1].unsqueeze(1)),dim=1)
+        return predicted_arr
+
 
 # daily_stock_AMZN_GOOGL()
 model = AE_SNP500()
-model.plot_predict()
+model.plot_multi_predict()

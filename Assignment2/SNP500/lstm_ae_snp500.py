@@ -7,7 +7,7 @@ from Assignment2.LSTM_AE import LSTM_AE as AE
 from Assignment2.SNP500.SNP_LSTM_AE import LSTM_AEP as AEP
 
 batch = 8
-epochs = 1
+epochs = 100
 optimizer = torch.optim.Adam
 hidden_state_sz = 50
 num_layers = 1
@@ -21,6 +21,8 @@ grad_clip = 1
 data_dict = SNP_data.split_data(SNP_data.parse())
 train_loader = torch.utils.data.DataLoader(data_dict['train_set'], batch_size=batch, shuffle=True)
 test_loader = torch.utils.data.DataLoader(data_dict['test_set'], batch_size=len(data_dict['test_set']), shuffle=False)
+
+torch.cuda.empty_cache()
 
 
 def daily_stock_AMZN_GOOGL():
@@ -207,25 +209,28 @@ class AE_SNP500():
         test_iter = iter(self.test_loader)
         test_data = test_iter.next()
         test_data = test_data[:, :-1]  # to make the amount of sub-sequence even
-        test_first_half = test_data[:, :int(test_data.shape[1]/2)].squeeze()
-        test_second_half = test_data[:, int(test_data.shape[1]/2):].squeeze()
-        predicted_arr = self.auto_regression(test_first_half)
+        test_first_half = test_data[:, :int(test_data.shape[1] / 2)].squeeze()
+        test_second_half = test_data[:, int(test_data.shape[1] / 2):].squeeze()
+        predicted_second_half = self.auto_regression(test_first_half)
+        multi_predicted = torch.cat((test_first_half, predicted_second_half.view(101, 9, -1)), dim=1).detach().cpu().squeeze().numpy()
 
-        amount_img = 2
-        test_data, reconstruction = self.get_reconstruct_and_test(amount_img, self.reconstruct_predict)
+        amount = 2
 
-        test_data = torch.flatten(test_data, 0, 1).unsqueeze(2)
-        y = test_data[:, 1:].view(-1, 19, 52)
-        y, reconstruction = self.revert_normalize_data(y, reconstruction)
-        dates = data_dict['dates'].reshape(53, 19)[:-1].flatten()
+        test_data = test_data[:amount].squeeze()
+        y, multi_predicted = self.revert_normalize_data(test_data, multi_predicted)
+        _, one_predict = self.get_reconstruct_and_test(amount, self.reconstruct_predict)
+        SNP_data.revert_normalize(one_predict, data_dict['test_mean'], data_dict['test_std'])
 
-        for i in range(amount_img):
+        dates = data_dict['dates'].reshape(53, 19)[:-1, 9:-1].flatten()
+
+        for i in range(amount):
             fig, axes = plt.subplots()
-            axes.xaxis.set_major_locator(MaxNLocator(5))
-            plt.plot(dates, y[i].flatten(), label='original')
-            plt.plot(dates, reconstruction[i].flatten(), label='predicted')
-            plt.title(f"Original vs predicted one step, symbol={data_dict['test_name'][i][0]}")
-            plt.xlabel("Date")
+            axes.xaxis.set_major_locator(MaxNLocator(6))
+            plt.plot(y[i][9:, :-1].flatten(), label='original')
+            plt.plot(multi_predicted[i][9:, :-1].flatten(), label='multi step predicted')
+            plt.plot(one_predict[i][9: -1].flatten(), label='one step predicted')
+            plt.title(f"Original vs predicted one step vs predicted multi step, symbol={data_dict['test_name'][i][0]}")
+            plt.xlabel("dayes")
             plt.ylabel("High Rate")
             plt.legend()
             plt.show()
@@ -248,16 +253,19 @@ class AE_SNP500():
         data_0, data_1, _ = data.shape
         iter = data.shape[1] * data.shape[2]
         model = self.AEP.to(self.device)
-        predicted_arr = torch.empty(data.shape[0], 1).to(self.device)
-        data = torch.flatten(data, 0, 1).unsqueeze(2)[:, :-1].to(self.device)
+        predicted_arr = torch.empty(data.shape[0], 1)
+        data = torch.flatten(data, 0, 1).unsqueeze(2)[:, :-1]
         for i in range(iter):
-            _, predict = model.forward(data)
-            last_predicted = predict[:, -1:].unsqueeze(2)
+            _, predict = model.forward(data.to(self.device))
+            last_predicted = predict[:, -1:].unsqueeze(2).detach().cpu()
             data = torch.cat((data[:, 1:], last_predicted[:, -1:]), dim=1)
-            predicted_arr = torch.cat((predicted_arr, predict.view(data_0, data_1, -1).flatten(1,2)[:, -1].unsqueeze(1)),dim=1)
-        return predicted_arr
+            predicted_arr = torch.cat(
+                (predicted_arr, predict.view(data_0, data_1, -1).flatten(1, 2)[:, -1].detach().cpu().unsqueeze(1)),
+                dim=1)
+        return predicted_arr[:, 1:].view(data_0, data_1, -1)
 
 
 # daily_stock_AMZN_GOOGL()
 model = AE_SNP500()
+# model.plot()
 model.plot_multi_predict()

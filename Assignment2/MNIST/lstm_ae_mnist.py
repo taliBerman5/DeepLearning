@@ -9,10 +9,10 @@ from Assignment2.MNIST.MNIST_LSTM_AE import LSTM_AEC as AEC
 
 
 
-batch = 100
+batch = 64
 epochs = 50
 optimizer = torch.optim.Adam
-hidden_state_sz = 27
+hidden_state_sz = 128
 hidden_state_sz_pixel = 500
 num_layers = 1
 lr = 0.001
@@ -99,7 +99,6 @@ class AE_MNIST():
         criterion_MSE = torch.nn.MSELoss().to(self.device)
         criterion_CE = torch.nn.CrossEntropyLoss().to(self.device)
         optimizer = self.optimizer_aec if isRow else self.optimizer_aec_pixel
-        #lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 100, 0.5)
 
         test_iter = iter(self.test_loader)
         test_images, test_labels = test_iter.next()
@@ -119,9 +118,9 @@ class AE_MNIST():
             curr_acc = 0
 
             for b, (images, labels) in enumerate(self.train_loader):
-                train_ind = images.squeeze().to(self.device)
+                train_ind = images.squeeze()
                 labels = labels.to(self.device)
-                train_ind = train_ind if isRow else train_ind.view(train_ind.shape[0], self.seq_sz_pixel, -1)
+                train_ind = train_ind.to(self.device) if isRow else train_ind.view(train_ind.shape[0], self.seq_sz_pixel, -1).to(self.device)
                 optimizer.zero_grad()
 
                 # forward pass
@@ -131,6 +130,7 @@ class AE_MNIST():
 
                 loss = (loss_MSE + loss_CE) / 2
 
+
                 # backward pass
                 loss.backward()
                 if grad_clip:
@@ -139,7 +139,6 @@ class AE_MNIST():
                 curr_loss += loss.item()
                 curr_acc += self.accuracy(classification, labels)
 
-            #lr_scheduler.step()
             train_loss.append(curr_loss / len(self.train_loader))
             train_acc.append(curr_acc / len(self.train_loader))
 
@@ -233,13 +232,16 @@ class AE_MNIST():
             axs[1, i].imshow(reconstruction[i], cmap='gray')
 
         axs[0, 0].set_ylabel("original")
-        axs[1, 0].set_ylabel("constructed")
+        axs[1, 0].set_ylabel("reconstructed")
         plt.suptitle("Origin vs Reconstructed images")
         plt.show()
 
 
 ae = AE_MNIST(hidden_state_sz=hidden_state_sz, lr=lr, grad_clip=grad_clip)
+# ae.plot()
 ae.plot_classification(isRow=1)
+epochs = 5
+ae.plot_classification(isRow=0)
 
 
 

@@ -6,14 +6,11 @@ import torchvision.transforms as transforms
 from Assignment2.LSTM_AE import LSTM_AE as AE
 from Assignment2.MNIST.MNIST_LSTM_AE import LSTM_AEC as AEC
 
-
-
-
-batch = 64
-epochs = 50
+batch = 128
+epochs = 5
 optimizer = torch.optim.Adam
 hidden_state_sz = 128
-hidden_state_sz_pixel = 500
+hidden_state_sz_pixel = 250
 num_layers = 1
 lr = 0.001
 input_sz = 28
@@ -24,7 +21,6 @@ input_sz_pixel = 1
 seq_sz_pixel = 784
 output_sz_pixel = 1
 grad_clip = 1
-
 
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081))])
 trainset = torchvision.datasets.MNIST(root="./data/", train=True, download=True, transform=transform)
@@ -120,7 +116,9 @@ class AE_MNIST():
             for b, (images, labels) in enumerate(self.train_loader):
                 train_ind = images.squeeze()
                 labels = labels.to(self.device)
-                train_ind = train_ind.to(self.device) if isRow else train_ind.view(train_ind.shape[0], self.seq_sz_pixel, -1).to(self.device)
+                train_ind = train_ind.to(self.device) if isRow else train_ind.view(train_ind.shape[0],
+                                                                                   self.seq_sz_pixel, -1).to(
+                    self.device)
                 optimizer.zero_grad()
 
                 # forward pass
@@ -129,7 +127,6 @@ class AE_MNIST():
                 loss_CE = criterion_CE(classification.squeeze(), labels)
 
                 loss = (loss_MSE + loss_CE) / 2
-
 
                 # backward pass
                 loss.backward()
@@ -148,6 +145,8 @@ class AE_MNIST():
             loss_test = (loss_MSE_test + loss_CE_test) / 2
             test_loss.append(loss_test.item())
             test_acc.append(self.accuracy(classification_test, test_labels))
+
+            torch.save(model.state_dict(), "./model")
 
         return train_loss, train_acc, test_loss, test_acc
 
@@ -214,7 +213,6 @@ class AE_MNIST():
             f'MNIST LSTM Accuracy {row_title} \n hidden state size = {self.hidden_state_sz}, learning rate = {self.lr}, gradient clipping = {self.grad_clip}')
         plt.show()
 
-
         amount_img = 3
         test_iter = iter(self.test_loader)
         test_images, test_labels = test_iter.next()
@@ -227,7 +225,7 @@ class AE_MNIST():
         f, axs = plt.subplots(2, amount_img)
 
         for i in range(amount_img):
-            axs[1, i].set_title(f"predicted label:{test_labels[i]}")
+            axs[1, i].set_title(f"predicted label:{labels[i]}")
             axs[0, i].imshow(test_images[i] / 0.3081 + 0.1307, cmap='gray')
             axs[1, i].imshow(reconstruction[i], cmap='gray')
 
@@ -240,8 +238,4 @@ class AE_MNIST():
 ae = AE_MNIST(hidden_state_sz=hidden_state_sz, lr=lr, grad_clip=grad_clip)
 # ae.plot()
 ae.plot_classification(isRow=1)
-epochs = 5
-ae.plot_classification(isRow=0)
-
-
-
+# ae.plot_classification(isRow=0)
